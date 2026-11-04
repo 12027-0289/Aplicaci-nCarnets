@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+
+# Datos reales de afiliados: NUNCA subirlos a GitHub
+datos/afiliados.csv
+datos/importar.sql
+datos/ejemplo.sql

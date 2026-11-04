@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi Carnet ADEP</title>
+<meta name="description" content="Cree y descargue su carnet digital de afiliado de la Asociación de Educadores Pensionados (ADEP).">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/estilos.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="/app.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <img class="logo" src="/logo.svg" alt="Logo ADEP">
+    <div class="header-title">
+      <strong>Mi Carnet ADEP</strong>
+      <span>Asociación de Educadores Pensionados</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Cargando el carnet guardado en este celular -->
+  <section id="paso-cargando" class="panel cargando">
+    <span class="spinner spinner-verde"></span>
+    <p>Cargando su carnet…</p>
+  </section>
+
+  <!-- Inicio: elegir qué hacer -->
+  <section id="paso-inicio" class="panel oculto">
+    <span class="etiqueta">Solo para afiliados</span>
+    <h1>Carnet de afiliado</h1>
+    <p class="sub">¿Qué desea hacer?</p>
+
+    <div class="opciones">
+      <button type="button" class="opcion" data-ir="paso-ingresar">
+        <span class="opcion-icono">🪪</span>
+        <span><strong>Ver mi carnet</strong><small>Ya lo creé antes</small></span>
+      </button>
+      <button type="button" class="opcion" data-ir="paso-crear">
+        <span class="opcion-icono">✨</span>
+        <span><strong>Crear mi carnet</strong><small>Es mi primera vez</small></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Ver mi carnet -->
+  <section id="paso-ingresar" class="panel oculto">
+    <button type="button" class="atras" data-ir="paso-inicio">← Volver</button>
+    <h1>Ver mi carnet</h1>
+    <p class="sub">Escriba su cédula y elija su fecha de nacimiento.</p>
+
+    <form id="form-ingresar" novalidate>
+      <div class="campo">
+        <label for="ingresar-cedula">Número de cédula</label>
+        <input id="ingresar-cedula" class="cedula" inputmode="numeric" autocomplete="off" placeholder="1-0234-0567" maxlength="11">
+      </div>
+      <div class="campo">
+        <span class="label">Fecha de nacimiento</span>
+        <div class="fecha" id="ingresar-fecha"></div>
+      </div>
+      <label class="recordar"><input type="checkbox" id="ingresar-recordar" checked> Recordar en este celular</label>
+      <p class="error-form oculto" role="alert"></p>
+      <button class="btn btn-principal" type="submit">Ver mi carnet</button>
+    </form>
+
+    <p class="cambiar">¿Es su primera vez? <button type="button" class="enlace" data-ir="paso-crear">Crear mi carnet</button></p>
+  </section>
+
+  <!-- Crear mi carnet -->
+  <section id="paso-crear" class="panel oculto">
+    <button type="button" class="atras" data-ir="paso-inicio">← Volver</button>
+    <h1>Crear mi carnet</h1>
+    <p class="sub">Complete sus datos. Solo los afiliados de ADEP pueden crear su carnet.</p>
+
+    <form id="form-crear" novalidate>
+      <div class="campo">
+        <label for="crear-cedula">Número de cédula</label>
+        <input id="crear-cedula" class="cedula" inputmode="numeric" autocomplete="off" placeholder="1-0234-0567" maxlength="11">
+      </div>
+      <div class="campo">
+        <label for="crear-nombre">Nombre completo</label>
+        <input id="crear-nombre" autocomplete="name" placeholder="Nombre y dos apellidos" maxlength="80">
+      </div>
+      <div class="campo">
+        <label for="crear-filial">Filial</label>
+        <select id="crear-filial">
+          <option value="">Elija su filial</option>
+        </select>
+      </div>
+      <div class="campo">
+        <span class="label">Fecha de nacimiento</span>
+        <div class="fecha" id="crear-fecha"></div>
+        <div class="ayuda">La usará para volver a ver su carnet.</div>
+      </div>
+      <label class="recordar"><input type="checkbox" id="crear-recordar" checked> Recordar en este celular</label>
+      <p class="error-form oculto" role="alert"></p>
+      <button class="btn btn-principal" type="submit">Crear mi carnet</button>
+    </form>
+
+    <p class="cambiar">¿Ya lo creó antes? <button type="button" class="enlace" data-ir="paso-ingresar">Ver mi carnet</button></p>
+  </section>
+
+  <!-- Avisos: no afiliado, ya existe, sin carnet -->
+  <section id="paso-aviso" class="panel oculto">
+    <div class="icono-estado" id="aviso-icono">!</div>
+    <h1 id="aviso-titulo" style="font-size: 26px;"></h1>
+    <p class="sub" id="aviso-texto"></p>
+    <div class="acciones" id="aviso-acciones"></div>
+  </section>
+
+  <!-- El carnet -->
+  <section id="paso-carnet" class="vista-carnet oculto">
+    <h2 id="saludo">¡Hola!</h2>
+    <p class="sub">Este es su carnet digital. Puede descargarlo o guardarlo en su celular.</p>
+
+    <div class="selector" role="group" aria-label="Formato del carnet">
+      <button type="button" data-formato="h">Horizontal</button>
+      <button type="button" data-formato="v" class="activo-sel">Vertical</button>
+    </div>
+
+    <!-- Carnet vertical -->
+    <div class="carnet-v" id="carnet-v">
+      <div class="cv-top">
+        <img class="marca-agua" src="/logo.svg" alt="">
+        <img class="logo" src="/logo.svg" alt="Logo ADEP">
+        <strong>ADEP</strong>
+        <span>Asociación de Educadores Pensionados</span>
+      </div>
+      <div class="cv-foto" data-campo="iniciales"></div>
+      <div class="cv-tipo">Carnet de afiliado</div>
+      <div class="cv-nombre" data-campo="nombre"></div>
+      <div class="cv-datos">
+        <div><small>Cédula</small><b data-campo="cedula"></b></div>
+        <div><small>Filial</small><b data-campo="filial"></b></div>
+      </div>
+      <div class="cv-pie">
+        <span class="activo"><i></i>AFILIADO ACTIVO</span>
+        <span class="emitido" data-campo="emitido"></span>
+      </div>
+      <div class="franja"></div>
+    </div>
+
+    <!-- Carnet horizontal -->
+    <div class="carnet oculto" id="carnet-h">
+      <img class="marca-agua" src="/logo.svg" alt="">
+      <div class="franja"></div>
+      <div class="carnet-contenido">
+        <div class="carnet-top">
+          <img class="logo" src="/logo.svg" alt="Logo ADEP">
+          <div class="carnet-org">
+            <strong>ADEP</strong>
+            <span>Asociación de Educadores<br>Pensionados</span>
+          </div>
+          <div class="carnet-tipo">Carnet de afiliado</div>
+        </div>
+        <div class="carnet-nombre" data-campo="nombre"></div>
+        <div class="carnet-datos">
+          <div class="carnet-dato"><small>Cédula</small><b data-campo="cedula"></b></div>
+          <div class="carnet-dato"><small>Filial</small><b data-campo="filial"></b></div>
+        </div>
+        <div class="carnet-pie">
+          <span class="activo"><i></i>AFILIADO ACTIVO</span>
+          <span class="emitido" data-campo="emitido"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="botones-carnet">
+      <button class="btn btn-principal" id="btn-descargar" type="button">⬇ Descargar imagen</button>
+      <button class="btn btn-secundario" type="button" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+    <button class="volver" type="button" id="btn-salir">Salir de este celular</button>
+  </section>
+</main>
+
+<footer>
+  <b>ADEP</b> · Comprensión · Fraternidad · Cooperación<br>
+  WhatsApp 8722-7777 · Tel. 2257-1511 · servicio@adepcr.org
+</footer>
+
+</body>
+</html>

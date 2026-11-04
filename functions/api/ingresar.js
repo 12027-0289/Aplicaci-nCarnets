@@ -1,0 +1,37 @@
+// POST /api/ingresar  { cedula, nacimiento }
+// Devuelve el carnet si la cédula y la fecha coinciden y el afiliado sigue activo.
+
+import {
+  json, leerCuerpo, leerCedula, leerFecha, estaBloqueado, registrarFallo,
+  esAfiliadoActivo, datosCarnet, MENSAJE_BLOQUEO
+} from "../../lib/comun.js";
+
+export async function onRequestPost({ request, env }) {
+  const cuerpo = await leerCuerpo(request);
+  const cedula = leerCedula(cuerpo.cedula);
+  const nacimiento = leerFecha(cuerpo.nacimiento);
+
+  if (!cedula) return json({ error: "Ingrese una cédula de 9 dígitos." }, 400);
+  if (!nacimiento) return json({ error: "Elija su fecha de nacimiento completa." }, 400);
+
+  if (await estaBloqueado(env, request)) return json({ error: MENSAJE_BLOQUEO }, 429);
+
+  if (!(await esAfiliadoActivo(env, cedula))) {
+    await registrarFallo(env, request);
+    return json({ estado: "no-afiliado" });
+  }
+
+  const carnet = await env.DB
+    .prepare("SELECT * FROM carnets WHERE cedula = ?")
+    .bind(cedula)
+    .first();
+
+  if (!carnet) return json({ estado: "sin-carnet" });
+
+  if (carnet.nacimiento !== nacimiento) {
+    await registrarFallo(env, request);
+    return json({ estado: "fecha-incorrecta" });
+  }
+
+  return json({ estado: "ok", carnet: datosCarnet(carnet) });
+}
