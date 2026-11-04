@@ -127,6 +127,8 @@ const camara = (() => {
     if (!video.videoWidth) return;
     // La vista previa es como un espejo; la foto guardada se voltea igual para que coincida con lo que vio.
     foto = recortarFoto(video, video.videoWidth, video.videoHeight, true);
+    const visor = video.parentElement;          // flash de cámara
+    visor.classList.remove("flash"); void visor.offsetWidth; visor.classList.add("flash");
     const vista = $("camara-captura");
     const img = new Image();
     img.onload = () => {
@@ -463,7 +465,12 @@ $("btn-descargar").addEventListener("click", async () => {
     return;
   }
   const visible = $("carnet-h").classList.contains("oculto") ? $("carnet-v") : $("carnet-h");
-  const canvas = await html2canvas(visible, { scale: 3, backgroundColor: null });
+  const canvas = await html2canvas(visible, {
+    scale: 3,
+    backgroundColor: null,
+    // En la copia que se convierte en imagen, sin animaciones (si no, el carnet saldría a medio aparecer)
+    onclone: doc => doc.body.classList.add("sin-animacion")
+  });
   const enlace = document.createElement("a");
   enlace.download = "carnet-adep.png";
   enlace.href = canvas.toDataURL("image/png");

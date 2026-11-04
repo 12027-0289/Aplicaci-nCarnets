@@ -25,7 +25,7 @@ public/                   → la página que ve el afiliado
   index.html
   estilos.css
   app.js
-  logo.svg                → logo provisional: reemplácelo por el oficial
+  logo.png                → logo oficial de ADEP
 functions/api/            → lo que corre en el servidor
   crear.js                → crea el carnet (si la cédula está en la lista)
   ingresar.js             → muestra el carnet con cédula + fecha de nacimiento
@@ -166,7 +166,8 @@ npx wrangler d1 execute carnet-adep --remote --command "SELECT COUNT(*) AS carne
   `data-campo="nombre|cedula|filial|emitido"` y la foto en los que tienen `data-foto`.
 - **Texto de autorización de la foto:** en `public/index.html` (busque "Autorizo a ADEP"). Conviene que
   ADEP lo revise.
-- **Logo:** reemplace `public/logo.svg` por el logo oficial (si es PNG, cambie `logo.svg` por `logo.png` en `index.html`).
+- **Logo:** está en `public/logo.png` (redondo, con fondo transparente). Para cambiarlo, reemplace ese archivo
+  por otro con el mismo nombre.
 - **Textos, teléfono y correo:** en `public/index.html`.
 - **Número y mensaje de WhatsApp:** al inicio de `public/app.js`.
 - **Colores:** al inicio de `public/estilos.css` (`--verde`, `--rojo`, etc.).
