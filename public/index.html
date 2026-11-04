@@ -99,6 +99,11 @@
         <div class="fecha" id="crear-fecha"></div>
         <div class="ayuda">La usará para volver a ver su carnet.</div>
       </div>
+      <div class="campo">
+        <span class="label">Foto de su rostro</span>
+        <div class="campo-foto" id="crear-foto"></div>
+      </div>
+      <label class="consentimiento"><input type="checkbox" id="crear-consentimiento"> <span>Autorizo a ADEP a guardar mi foto y mis datos para emitir mi carnet de afiliado, según la Ley 8968 de Protección de la Persona frente al Tratamiento de sus Datos Personales. Puedo pedir que se borren escribiendo a servicio@adepcr.org.</span></label>
       <label class="recordar"><input type="checkbox" id="crear-recordar" checked> Recordar en este celular</label>
       <p class="error-form oculto" role="alert"></p>
       <button class="btn btn-principal" type="submit">Crear mi carnet</button>
@@ -106,6 +111,40 @@
 
     <p class="cambiar">¿Ya lo creó antes? <button type="button" class="enlace" data-ir="paso-ingresar">Ver mi carnet</button></p>
   </section>
+
+  <!-- Agregar o cambiar la foto de un carnet que ya existe -->
+  <section id="paso-foto" class="panel oculto">
+    <h1 id="foto-titulo">Agregue su foto</h1>
+    <p class="sub" id="foto-texto">Ahora el carnet lleva la foto de su rostro. Tómesela una sola vez y quedará guardada.</p>
+
+    <form id="form-foto" novalidate>
+      <div class="campo-foto" id="actualizar-foto"></div>
+      <label class="consentimiento"><input type="checkbox" id="foto-consentimiento"> <span>Autorizo a ADEP a guardar mi foto y mis datos para emitir mi carnet de afiliado, según la Ley 8968 de Protección de la Persona frente al Tratamiento de sus Datos Personales. Puedo pedir que se borren escribiendo a servicio@adepcr.org.</span></label>
+      <p class="error-form oculto" role="alert"></p>
+      <button class="btn btn-principal" type="submit">Guardar foto</button>
+    </form>
+
+    <p class="cambiar"><button type="button" class="enlace" id="foto-despues">Ahora no, ver mi carnet</button></p>
+  </section>
+
+  <!-- Cámara (pantalla completa) -->
+  <div id="camara" class="camara oculto" role="dialog" aria-modal="true" aria-label="Tomar foto">
+    <div class="camara-visor">
+      <video id="camara-video" playsinline muted></video>
+      <canvas id="camara-captura" class="oculto"></canvas>
+      <div class="camara-guia" aria-hidden="true"></div>
+    </div>
+    <p class="camara-ayuda" id="camara-ayuda">Ponga su cara dentro del óvalo, de frente y con buena luz.</p>
+    <div class="camara-botones" id="camara-tomando">
+      <button type="button" class="btn btn-secundario" id="camara-cancelar">Cancelar</button>
+      <button type="button" class="camara-disparo" id="camara-disparar" aria-label="Tomar foto"></button>
+      <span class="camara-espacio"></span>
+    </div>
+    <div class="camara-botones oculto" id="camara-revisando">
+      <button type="button" class="btn btn-secundario" id="camara-otra">Tomar otra</button>
+      <button type="button" class="btn btn-principal" id="camara-usar">Usar esta foto</button>
+    </div>
+  </div>
 
   <!-- Avisos: no afiliado, ya existe, sin carnet -->
   <section id="paso-aviso" class="panel oculto">
@@ -125,6 +164,11 @@
       <button type="button" data-formato="v" class="activo-sel">Vertical</button>
     </div>
 
+    <!-- ===== PLANTILLA PROVISIONAL DEL CARNET =====
+         Cuando llegue la plantilla oficial, se reemplaza lo que hay entre estas marcas
+         y la sección "Plantilla del carnet" de estilos.css. Los datos se llenan solos en
+         los elementos con data-campo="..." y la foto en los elementos con data-foto. -->
+
     <!-- Carnet vertical -->
     <div class="carnet-v" id="carnet-v">
       <div class="cv-top">
@@ -133,7 +177,7 @@
         <strong>ADEP</strong>
         <span>Asociación de Educadores Pensionados</span>
       </div>
-      <div class="cv-foto" data-campo="iniciales"></div>
+      <div class="cv-foto" data-foto></div>
       <div class="cv-tipo">Carnet de afiliado</div>
       <div class="cv-nombre" data-campo="nombre"></div>
       <div class="cv-datos">
@@ -160,22 +204,30 @@
           </div>
           <div class="carnet-tipo">Carnet de afiliado</div>
         </div>
-        <div class="carnet-nombre" data-campo="nombre"></div>
-        <div class="carnet-datos">
-          <div class="carnet-dato"><small>Cédula</small><b data-campo="cedula"></b></div>
-          <div class="carnet-dato"><small>Filial</small><b data-campo="filial"></b></div>
-        </div>
-        <div class="carnet-pie">
-          <span class="activo"><i></i>AFILIADO ACTIVO</span>
-          <span class="emitido" data-campo="emitido"></span>
+        <div class="carnet-cuerpo">
+          <div class="carnet-foto" data-foto></div>
+          <div class="carnet-info">
+            <div class="carnet-nombre" data-campo="nombre"></div>
+            <div class="carnet-datos">
+              <div class="carnet-dato"><small>Cédula</small><b data-campo="cedula"></b></div>
+              <div class="carnet-dato"><small>Filial</small><b data-campo="filial"></b></div>
+            </div>
+            <div class="carnet-pie">
+              <span class="activo"><i></i>AFILIADO ACTIVO</span>
+              <span class="emitido" data-campo="emitido"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    <!-- ===== FIN DE LA PLANTILLA PROVISIONAL ===== -->
 
     <div class="botones-carnet">
       <button class="btn btn-principal" id="btn-descargar" type="button">⬇ Descargar imagen</button>
       <button class="btn btn-secundario" type="button" onclick="window.print()">🖨 Imprimir</button>
     </div>
+    <button class="btn btn-secundario btn-cambiar-foto" type="button" id="btn-cambiar-foto">📷 Cambiar mi foto</button>
+    <br>
     <button class="volver" type="button" id="btn-salir">Salir de este celular</button>
   </section>
 </main>

@@ -13,7 +13,8 @@
     "db:subir-local": "wrangler d1 execute carnet-adep --local --file=datos/importar.sql",
     "db:crear": "wrangler d1 execute carnet-adep --remote --file=schema.sql",
     "db:subir": "wrangler d1 execute carnet-adep --remote --file=datos/importar.sql",
-    "publicar": "wrangler pages deploy"
+    "publicar": "wrangler pages deploy",
+    "borrar-foto": "node scripts/borrar-foto.mjs"
   },
   "devDependencies": {
     "wrangler": "4.149.0"

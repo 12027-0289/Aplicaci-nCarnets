@@ -33,5 +33,5 @@ export async function onRequestPost({ request, env }) {
     return json({ estado: "fecha-incorrecta" });
   }
 
-  return json({ estado: "ok", carnet: datosCarnet(carnet) });
+  return json({ estado: "ok", carnet: await datosCarnet(env, carnet) });
 }

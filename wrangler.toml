@@ -7,3 +7,8 @@ binding = "DB"
 database_name = "carnet-adep"
 # Pegue aquí el ID que le da el comando: npx wrangler d1 create carnet-adep
 database_id = "00000000-0000-0000-0000-000000000000"
+
+# Fotos de los afiliados. Créelo con: npx wrangler r2 bucket create carnet-adep-fotos
+[[r2_buckets]]
+binding = "FOTOS"
+bucket_name = "carnet-adep-fotos"

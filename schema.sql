@@ -17,8 +17,11 @@ CREATE TABLE IF NOT EXISTS carnets (
   filial     TEXT NOT NULL,
   nacimiento TEXT NOT NULL,          -- formato AAAA-MM-DD
   token      TEXT NOT NULL UNIQUE,   -- para "recordar en este celular"
-  creado     TEXT NOT NULL           -- fecha de creación AAAA-MM-DD
+  creado     TEXT NOT NULL,          -- fecha de creación AAAA-MM-DD
+  foto       TEXT,                   -- fecha y hora en que subió su foto (NULL = sin foto)
+  consentimiento TEXT                -- fecha y hora en que autorizó guardar su foto
 );
+-- La foto en sí se guarda en Cloudflare R2 (bucket "carnet-adep-fotos") como fotos/<cedula>.jpg
 
 -- Intentos fallidos por IP, para frenar a quien pruebe muchas fechas o cédulas.
 CREATE TABLE IF NOT EXISTS intentos (

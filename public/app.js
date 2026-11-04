@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-const pasos = ["paso-cargando", "paso-inicio", "paso-ingresar", "paso-crear", "paso-aviso", "paso-carnet"];
+const pasos = ["paso-cargando", "paso-inicio", "paso-ingresar", "paso-crear", "paso-foto", "paso-aviso", "paso-carnet"];
 
 const CLAVE_TOKEN = "carnet-adep-token";
 const WHATSAPP = "https://wa.me/50687227777?text=" + encodeURIComponent("Hola, quisiera afiliarme a ADEP.");
@@ -54,6 +54,160 @@ function crearSelectorFecha(contenedor) {
 
 const fechaIngresar = crearSelectorFecha($("ingresar-fecha"));
 const fechaCrear = crearSelectorFecha($("crear-fecha"));
+
+// --- Foto del rostro ---
+// La foto se recorta a 3:4 (como foto de carnet) y se comprime en el celular
+// antes de enviarla, para que suba rápido aunque la señal sea mala.
+const FOTO_ANCHO = 480;
+const FOTO_ALTO = 640;
+
+function recortarFoto(fuente, ancho, alto, espejo = false) {
+  const canvas = document.createElement("canvas");
+  canvas.width = FOTO_ANCHO;
+  canvas.height = FOTO_ALTO;
+  const ctx = canvas.getContext("2d");
+  // Recorte centrado con la proporción 3:4
+  const escala = Math.max(FOTO_ANCHO / ancho, FOTO_ALTO / alto);
+  const w = FOTO_ANCHO / escala, h = FOTO_ALTO / escala;
+  if (espejo) { ctx.translate(FOTO_ANCHO, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(fuente, (ancho - w) / 2, (alto - h) / 2, w, h, 0, 0, FOTO_ANCHO, FOTO_ALTO);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+function fotoDeArchivo(archivo) {
+  return new Promise((resolver, rechazar) => {
+    const url = URL.createObjectURL(archivo);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolver(recortarFoto(img, img.naturalWidth, img.naturalHeight)); };
+    img.onerror = () => { URL.revokeObjectURL(url); rechazar(); };
+    img.src = url;
+  });
+}
+
+// Cámara a pantalla completa. Devuelve la foto (data URL) o null si la persona cancela.
+const camara = (() => {
+  const video = $("camara-video");
+  let flujo = null;
+  let resolver = null;
+  let foto = null;
+
+  function apagar() {
+    flujo?.getTracks().forEach(t => t.stop());
+    flujo = null;
+    video.srcObject = null;
+  }
+  function revisar(modo) {
+    $("camara-tomando").classList.toggle("oculto", modo);
+    $("camara-revisando").classList.toggle("oculto", !modo);
+    $("camara-ayuda").textContent = modo
+      ? "¿Se ve bien su cara? Si no, tome otra."
+      : "Ponga su cara dentro del óvalo, de frente y con buena luz.";
+    $("camara").classList.toggle("revisando", modo);
+  }
+  function cerrar(resultado) {
+    apagar();
+    $("camara").classList.add("oculto");
+    document.body.classList.remove("sin-scroll");
+    resolver?.(resultado);
+    resolver = null;
+  }
+  async function encender() {
+    flujo = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false
+    });
+    video.srcObject = flujo;
+    await video.play();
+  }
+
+  $("camara-disparar").addEventListener("click", () => {
+    if (!video.videoWidth) return;
+    // La vista previa es como un espejo; la foto guardada se voltea igual para que coincida con lo que vio.
+    foto = recortarFoto(video, video.videoWidth, video.videoHeight, true);
+    const vista = $("camara-captura");
+    const img = new Image();
+    img.onload = () => {
+      vista.width = FOTO_ANCHO; vista.height = FOTO_ALTO;
+      vista.getContext("2d").drawImage(img, 0, 0);
+    };
+    img.src = foto;
+    apagar();
+    revisar(true);
+  });
+  $("camara-otra").addEventListener("click", async () => {
+    revisar(false);
+    try { await encender(); } catch { cerrar(null); }
+  });
+  $("camara-usar").addEventListener("click", () => cerrar(foto));
+  $("camara-cancelar").addEventListener("click", () => cerrar(null));
+
+  return {
+    disponible: () => Boolean(navigator.mediaDevices?.getUserMedia),
+    // Lanza un error si no hay permiso o no hay cámara; quien llama ofrece la galería.
+    async abrir() {
+      revisar(false);
+      $("camara").classList.remove("oculto");
+      document.body.classList.add("sin-scroll");
+      try {
+        await encender();
+      } catch (e) {
+        cerrar(null);
+        throw e;
+      }
+      return new Promise(r => { resolver = r; });
+    }
+  };
+})();
+
+// Campo de foto dentro de un formulario: vista previa + "Tomar foto" + "Elegir de mis fotos".
+function crearCampoFoto(contenedor) {
+  let foto = null;
+  contenedor.innerHTML = `
+    <div class="foto-vista"><span>📷</span></div>
+    <div class="foto-acciones">
+      <button type="button" class="btn btn-secundario" data-accion="camara">📷 Tomar foto</button>
+      <label class="btn btn-claro">🖼 Elegir de mis fotos
+        <input type="file" accept="image/*" class="oculto" data-accion="archivo">
+      </label>
+      <div class="ayuda">De frente, sin lentes oscuros ni gorra, con buena luz.</div>
+    </div>`;
+  const vista = contenedor.querySelector(".foto-vista");
+  const archivo = contenedor.querySelector("[data-accion=archivo]");
+  const botonCamara = contenedor.querySelector("[data-accion=camara]");
+
+  function poner(nueva) {
+    foto = nueva;
+    vista.innerHTML = foto ? `<img src="${foto}" alt="Su foto">` : "<span>📷</span>";
+    vista.classList.toggle("con-foto", Boolean(foto));
+    botonCamara.textContent = foto ? "📷 Tomar otra" : "📷 Tomar foto";
+  }
+  const error = mensaje => {
+    const form = contenedor.closest("form");
+    if (form) mostrarError(form, mensaje);
+  };
+
+  botonCamara.addEventListener("click", async () => {
+    if (!camara.disponible()) return archivo.click();
+    try {
+      const nueva = await camara.abrir();
+      if (nueva) poner(nueva);
+    } catch {
+      error("No se pudo abrir la cámara. Revise que le dio permiso al navegador, o elija una foto de su celular.");
+    }
+  });
+  archivo.addEventListener("change", async () => {
+    const elegido = archivo.files[0];
+    archivo.value = "";
+    if (!elegido) return;
+    try { poner(await fotoDeArchivo(elegido)); }
+    catch { error("No se pudo abrir esa imagen. Pruebe con otra foto."); }
+  });
+
+  return { valor: () => foto, limpiar: () => poner(null) };
+}
+
+const fotoCrear = crearCampoFoto($("crear-foto"));
+const fotoActualizar = crearCampoFoto($("actualizar-foto"));
 
 // --- Filiales ---
 async function cargarFiliales() {
@@ -114,7 +268,10 @@ function iniciales(nombre) {
   return (partes[0][0] + (apellido ?? "")[0]).toUpperCase();
 }
 
+let carnetActual = null;
+
 function mostrarCarnet(carnet) {
+  carnetActual = carnet;
   const [a, m, d] = carnet.creado.split("-");
   const valores = {
     nombre: carnet.nombre,
@@ -125,6 +282,18 @@ function mostrarCarnet(carnet) {
   };
   document.querySelectorAll("[data-campo]").forEach(el => {
     el.textContent = valores[el.dataset.campo];
+  });
+  document.querySelectorAll("[data-foto]").forEach(el => {
+    el.classList.toggle("con-foto", Boolean(carnet.foto));
+    if (carnet.foto) {
+      el.innerHTML = "";
+      const img = new Image();
+      img.src = carnet.foto;
+      img.alt = "Foto de " + carnet.nombre;
+      el.appendChild(img);
+    } else {
+      el.textContent = valores.iniciales;
+    }
   });
   $("saludo").textContent = "¡Hola, " + carnet.nombre.split(" ")[0] + "!";
   mostrar("paso-carnet");
@@ -157,6 +326,11 @@ async function enviar(form, url, datos) {
   }
 }
 
+// El aviso de error se quita cuando la persona corrige algo.
+document.querySelectorAll("form").forEach(form => form.addEventListener("change", () => {
+  form.querySelector(".error-form").classList.add("oculto");
+}));
+
 function mostrarError(form, mensaje) {
   const error = form.querySelector(".error-form");
   error.textContent = mensaje;
@@ -167,8 +341,47 @@ function terminar(form, carnet, recordar) {
   if (recordar) token.guardar(carnet.token);
   else token.borrar();
   form.reset();
-  mostrarCarnet(carnet);
+  fotoCrear.limpiar();
+  // Carnets creados antes de que existieran las fotos: se les pide la foto al entrar.
+  if (carnet.foto) mostrarCarnet(carnet);
+  else pedirFoto(carnet, false);
 }
+
+// --- Agregar o cambiar la foto ---
+function pedirFoto(carnet, cambiar) {
+  carnetActual = carnet;
+  $("foto-titulo").textContent = cambiar ? "Cambiar mi foto" : "Agregue su foto";
+  $("foto-texto").textContent = cambiar
+    ? "La nueva foto reemplaza a la anterior en todos los celulares donde abra su carnet."
+    : "Ahora el carnet lleva la foto de su rostro. Tómesela una sola vez y quedará guardada.";
+  $("foto-despues").textContent = cambiar ? "Cancelar" : "Ahora no, ver mi carnet";
+  fotoActualizar.limpiar();
+  $("foto-consentimiento").checked = false;
+  $("form-foto").querySelector(".error-form").classList.add("oculto");
+  mostrar("paso-foto");
+}
+
+$("form-foto").addEventListener("submit", async e => {
+  e.preventDefault();
+  const form = e.target;
+  const foto = fotoActualizar.valor();
+  if (!foto) return mostrarError(form, "Primero tómese la foto o elíjala de su celular.");
+  if (!$("foto-consentimiento").checked) return mostrarError(form, "Marque la casilla de autorización para guardar su foto.");
+
+  const r = await enviar(form, "/api/foto", { token: carnetActual.token, foto, consentimiento: true });
+  if (r.estado === "ok") mostrarCarnet(r.carnet);
+  else if (r.estado === "invalido") {
+    token.borrar();
+    aviso({
+      titulo: "Vuelva a ingresar",
+      texto: "No pudimos confirmar su carnet. Ingrese de nuevo con su cédula y fecha de nacimiento.",
+      acciones: [{ texto: "Ver mi carnet", clase: "btn-principal", ir: "paso-ingresar" }]
+    });
+  }
+});
+
+$("foto-despues").addEventListener("click", () => mostrarCarnet(carnetActual));
+$("btn-cambiar-foto").addEventListener("click", () => pedirFoto(carnetActual, true));
 
 $("form-ingresar").addEventListener("submit", async e => {
   e.preventDefault();
@@ -198,13 +411,16 @@ $("form-crear").addEventListener("submit", async e => {
   const nombre = $("crear-nombre").value.trim().replace(/\s+/g, " ");
   const filial = $("crear-filial").value;
   const nacimiento = fechaCrear.valor();
+  const foto = fotoCrear.valor();
 
   if (cedula.length !== 9) return mostrarError(form, "Escriba su cédula completa (9 dígitos).");
   if (nombre.length < 5 || !nombre.includes(" ")) return mostrarError(form, "Escriba su nombre completo (nombre y apellidos).");
   if (!filial) return mostrarError(form, "Elija su filial.");
   if (!nacimiento) return mostrarError(form, "Elija el día, el mes y el año de su nacimiento.");
+  if (!foto) return mostrarError(form, "Tómese una foto de su rostro (o elíjala de su celular).");
+  if (!$("crear-consentimiento").checked) return mostrarError(form, "Marque la casilla de autorización para guardar su foto.");
 
-  const r = await enviar(form, "/api/crear", { cedula, nombre, filial, nacimiento });
+  const r = await enviar(form, "/api/crear", { cedula, nombre, filial, nacimiento, foto, consentimiento: true });
   if (r.estado === "ok") terminar(form, r.carnet, $("crear-recordar").checked);
   else if (r.estado === "no-afiliado") avisoNoAfiliado();
   else if (r.estado === "ya-existe") aviso({
@@ -241,6 +457,7 @@ $("btn-descargar").addEventListener("click", async () => {
 
 $("btn-salir").addEventListener("click", () => {
   token.borrar();
+  carnetActual = null;
   mostrar("paso-inicio");
 });
 
@@ -257,7 +474,7 @@ async function iniciar() {
       body: JSON.stringify({ token: guardado })
     });
     const r = await res.json();
-    if (r.estado === "ok") return mostrarCarnet(r.carnet);
+    if (r.estado === "ok") return r.carnet.foto ? mostrarCarnet(r.carnet) : pedirFoto(r.carnet, false);
     if (res.status === 401) token.borrar();
   } catch {
     // Sin conexión: se muestra el inicio
