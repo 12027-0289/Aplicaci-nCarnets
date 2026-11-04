@@ -6,8 +6,11 @@ const WHATSAPP = "https://wa.me/50687227777?text=" + encodeURIComponent("Hola, q
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
                "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
+const icono = nombre => `<svg class="ico" aria-hidden="true"><use href="#i-${nombre}"/></svg>`;
+
 function mostrar(paso) {
   pasos.forEach(p => $(p).classList.toggle("oculto", p !== paso));
+  document.body.dataset.paso = paso;   // la portada grande solo se ve en el inicio
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -163,10 +166,10 @@ const camara = (() => {
 function crearCampoFoto(contenedor) {
   let foto = null;
   contenedor.innerHTML = `
-    <div class="foto-vista"><span>📷</span></div>
+    <div class="foto-vista">${icono("persona")}</div>
     <div class="foto-acciones">
-      <button type="button" class="btn btn-secundario" data-accion="camara">📷 Tomar foto</button>
-      <label class="btn btn-claro">🖼 Elegir de mis fotos
+      <button type="button" class="btn btn-secundario" data-accion="camara">${icono("camara")} <span>Tomar foto</span></button>
+      <label class="btn btn-claro">${icono("imagen")} Elegir de mis fotos
         <input type="file" accept="image/*" class="oculto" data-accion="archivo">
       </label>
       <div class="ayuda">De frente, sin lentes oscuros ni gorra, con buena luz.</div>
@@ -177,9 +180,9 @@ function crearCampoFoto(contenedor) {
 
   function poner(nueva) {
     foto = nueva;
-    vista.innerHTML = foto ? `<img src="${foto}" alt="Su foto">` : "<span>📷</span>";
+    vista.innerHTML = foto ? `<img src="${foto}" alt="Su foto">` : icono("persona");
     vista.classList.toggle("con-foto", Boolean(foto));
-    botonCamara.textContent = foto ? "📷 Tomar otra" : "📷 Tomar foto";
+    botonCamara.querySelector("span").textContent = foto ? "Tomar otra" : "Tomar foto";
   }
   const error = mensaje => {
     const form = contenedor.closest("form");
@@ -234,8 +237,10 @@ function irA(paso) {
 }
 
 // --- Avisos ---
-function aviso({ icono = "!", titulo, texto, acciones }) {
-  $("aviso-icono").textContent = icono;
+// tipo: "alerta" (rojo) o "info" (verde). simbolo: nombre del ícono.
+function aviso({ tipo = "alerta", simbolo = "alerta", titulo, texto, acciones }) {
+  $("aviso-icono").innerHTML = icono(simbolo);
+  $("aviso-icono").className = "icono-estado " + tipo;
   $("aviso-titulo").textContent = titulo;
   $("aviso-texto").textContent = texto;
   const contenedor = $("aviso-acciones");
@@ -407,7 +412,7 @@ $("form-ingresar").addEventListener("submit", async e => {
   else if (r.estado === "no-afiliado") avisoNoAfiliado();
   else if (r.estado === "fecha-incorrecta") mostrarError(form, "La fecha de nacimiento no coincide con la que registró al crear su carnet.");
   else if (r.estado === "sin-carnet") aviso({
-    icono: "✨",
+    tipo: "info", simbolo: "mas",
     titulo: "Todavía no ha creado su carnet",
     texto: "Su cédula está en la lista de afiliados, pero aún no ha creado su carnet. Es rápido: solo complete sus datos.",
     acciones: [{ texto: "Crear mi carnet", clase: "btn-principal", ir: "paso-crear" }]
@@ -434,7 +439,7 @@ $("form-crear").addEventListener("submit", async e => {
   if (r.estado === "ok") terminar(form, r, $("crear-recordar").checked);
   else if (r.estado === "no-afiliado") avisoNoAfiliado();
   else if (r.estado === "ya-existe") aviso({
-    icono: "🪪",
+    tipo: "info", simbolo: "carnet",
     titulo: "Usted ya tiene un carnet",
     texto: "Esta cédula ya tiene un carnet creado. Para verlo, use su cédula y su fecha de nacimiento. Si no fue usted quien lo creó, escríbanos por WhatsApp.",
     acciones: [
