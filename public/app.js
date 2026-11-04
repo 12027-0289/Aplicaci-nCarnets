@@ -8,7 +8,51 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
 
 const icono = nombre => `<svg class="ico" aria-hidden="true"><use href="#i-${nombre}"/></svg>`;
 
+// --- Animaciones para celular ---
+const movimientoReducido = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Vibración corta (solo Android; en iPhone no hace nada)
+function vibrar(patron) {
+  try { if (!movimientoReducido()) navigator.vibrate?.(patron); } catch {}
+}
+
+// Onda que sale desde donde toca el dedo
+document.addEventListener("pointerdown", e => {
+  const el = e.target.closest(".opcion, .btn, .contacto, .enlace-icono, .selector button, .atras");
+  if (!el || el.disabled || movimientoReducido()) return;
+  const caja = el.getBoundingClientRect();
+  const tam = Math.max(caja.width, caja.height) * 2.2;
+  const onda = document.createElement("span");
+  onda.className = "onda";
+  onda.style.cssText = `width:${tam}px;height:${tam}px;left:${e.clientX - caja.left - tam / 2}px;top:${e.clientY - caja.top - tam / 2}px`;
+  el.appendChild(onda);
+  onda.addEventListener("animationend", () => onda.remove());
+});
+
+// Confeti con los colores de ADEP al crear el carnet o guardar la foto
+function celebrar() {
+  if (movimientoReducido()) return;
+  const capa = document.createElement("div");
+  capa.className = "confeti";
+  const colores = ["#128a3e", "#d7242a", "#ffffff", "#1ea552", "#f4c542"];
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("i");
+    p.style.cssText = `left:${Math.random() * 100}%;background:${colores[i % colores.length]};` +
+      `animation-delay:${Math.random() * .35}s;animation-duration:${1.6 + Math.random() * 1.2}s;` +
+      `--deriva:${(Math.random() - .5) * 160}px;--giro:${(Math.random() - .5) * 1080}deg;` +
+      `width:${6 + Math.random() * 6}px;height:${10 + Math.random() * 8}px`;
+    capa.appendChild(p);
+  }
+  document.body.appendChild(capa);
+  setTimeout(() => capa.remove(), 3500);
+}
+
+let pasoActual = "paso-cargando";
+
 function mostrar(paso) {
+  // Hacia adelante entra desde la derecha; al volver, desde la izquierda (como en las apps)
+  document.body.dataset.direccion = pasos.indexOf(paso) >= pasos.indexOf(pasoActual) ? "adelante" : "atras";
+  pasoActual = paso;
   pasos.forEach(p => $(p).classList.toggle("oculto", p !== paso));
   document.body.dataset.paso = paso;   // la portada grande solo se ve en el inicio
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -127,6 +171,7 @@ const camara = (() => {
     if (!video.videoWidth) return;
     // La vista previa es como un espejo; la foto guardada se voltea igual para que coincida con lo que vio.
     foto = recortarFoto(video, video.videoWidth, video.videoHeight, true);
+    vibrar(35);
     const visor = video.parentElement;          // flash de cámara
     visor.classList.remove("flash"); void visor.offsetWidth; visor.classList.add("flash");
     const vista = $("camara-captura");
@@ -277,8 +322,9 @@ function iniciales(nombre) {
 
 let carnetActual = null;
 
-function mostrarCarnet(carnet) {
+function mostrarCarnet(carnet, festejar = false) {
   carnetActual = carnet;
+  if (festejar) { setTimeout(celebrar, 350); vibrar([30, 50, 30, 50, 60]); }
   const [a, m, d] = carnet.creado.split("-");
   const valores = {
     nombre: carnet.nombre,
@@ -342,6 +388,10 @@ function mostrarError(form, mensaje) {
   const error = form.querySelector(".error-form");
   error.textContent = mensaje;
   error.classList.remove("oculto");
+  // El aviso "tiembla" cada vez que aparece, y el celular vibra dos veces
+  error.classList.remove("temblar"); void error.offsetWidth; error.classList.add("temblar");
+  vibrar([40, 60, 40]);
+  error.scrollIntoView({ block: "center", behavior: movimientoReducido() ? "auto" : "smooth" });
 }
 
 // estado "ok" → muestra el carnet; "sin-foto" → carnet sin foto: debe agregarla antes de verlo.
@@ -350,7 +400,7 @@ function terminar(form, r, recordar) {
   else token.borrar();
   form.reset();
   fotoCrear.limpiar();
-  if (r.estado === "ok") mostrarCarnet(r.carnet);
+  if (r.estado === "ok") mostrarCarnet(r.carnet, form.id === "form-crear");
   else pedirFoto(r.carnet, false);
 }
 
@@ -381,7 +431,7 @@ $("form-foto").addEventListener("submit", async e => {
   if (!$("foto-consentimiento").checked) return mostrarError(form, "Marque la casilla de autorización para guardar su foto.");
 
   const r = await enviar(form, "/api/foto", { token: carnetActual.token, foto, consentimiento: true });
-  if (r.estado === "ok") mostrarCarnet(r.carnet);
+  if (r.estado === "ok") mostrarCarnet(r.carnet, true);
   else if (r.estado === "invalido") {
     token.borrar();
     aviso({
@@ -482,6 +532,32 @@ $("btn-salir").addEventListener("click", () => {
   carnetActual = null;
   mostrar("paso-inicio");
 });
+
+// --- Carnet en 3D: se inclina siguiendo el dedo y vuelve a su lugar al soltar ---
+(() => {
+  const marco = $("marco-carnet");
+  const visible = () => $("carnet-h").classList.contains("oculto") ? $("carnet-v") : $("carnet-h");
+  function inclinar(e) {
+    if (movimientoReducido()) return;
+    const caja = visible().getBoundingClientRect();
+    const x = (e.clientX - caja.left) / caja.width - .5;
+    const y = (e.clientY - caja.top) / caja.height - .5;
+    if (Math.abs(x) > .6 || Math.abs(y) > .6) return soltar();
+    marco.style.setProperty("--ry", `${x * 18}deg`);
+    marco.style.setProperty("--rx", `${-y * 14}deg`);
+    marco.style.setProperty("--luz-x", `${(x + .5) * 100}%`);
+    marco.style.setProperty("--luz-y", `${(y + .5) * 100}%`);
+    marco.classList.add("inclinado");
+  }
+  function soltar() {
+    marco.classList.remove("inclinado");
+    marco.style.setProperty("--rx", "0deg");
+    marco.style.setProperty("--ry", "0deg");
+  }
+  marco.addEventListener("pointermove", inclinar);
+  marco.addEventListener("pointerdown", inclinar);
+  ["pointerup", "pointerleave", "pointercancel"].forEach(t => marco.addEventListener(t, soltar));
+})();
 
 // --- Al abrir la página: si este celular recuerda un carnet, mostrarlo directo ---
 async function iniciar() {

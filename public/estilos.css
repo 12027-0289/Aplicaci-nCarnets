@@ -474,7 +474,7 @@ input::placeholder { color: #9aa9a0; }
   font-size: 2.5cqw; font-weight: 800;
   padding: 1cqw 2.6cqw; border-radius: 999px;
 }
-.activo i { width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #22c55e; display: block; }
+.activo i { width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #22c55e; display: block; position: relative; } /* relative: si no, no sale en la imagen descargada */
 .emitido { font-size: 2.3cqw; opacity: .85; }
 
 /* Carnet vertical */
@@ -660,6 +660,8 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 
   /* Pantallas */
   .panel { animation: subir .45s cubic-bezier(.2,.8,.2,1) both; }
+  body[data-direccion="adelante"]:not([data-paso="paso-inicio"]) .panel { animation-name: desde-derecha; }
+  body[data-direccion="atras"] .panel { animation-name: desde-izquierda; }
   .opciones > .opcion { animation: subir .5s cubic-bezier(.2,.8,.2,1) both; }
   .opciones > .opcion:nth-child(1) { animation-delay: .15s, 1.6s; }
   .opciones > .opcion:nth-child(2) { animation-delay: .27s; }
@@ -669,10 +671,11 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 
   /* Botones: se levantan un poco al pasar el dedo o el ratón */
   .opcion, .btn, .contacto { transition: transform .18s ease, background .15s, box-shadow .18s; }
-  .opcion:hover, .btn:hover, .contacto:hover { transform: translateY(-2px); }
+  @media (hover: hover) { .opcion:hover, .btn:hover, .contacto:hover { transform: translateY(-2px); } }
   .opcion:active, .btn:active, .contacto:active { transform: scale(.98); }
   .opcion > .ico { transition: transform .2s ease; }
-  .opcion:hover > .ico { transform: translateX(4px); }
+  @media (hover: hover) { .opcion:hover > .ico { transform: translateX(4px); } }
+  .opcion:active > .ico { transform: translateX(6px); }
 
   /* Foto elegida */
   .foto-vista.con-foto img { animation: saltar .45s cubic-bezier(.2,.8,.2,1) both; }
@@ -695,3 +698,63 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 }
 
 .sin-animacion *, .sin-animacion *::before, .sin-animacion *::after { animation: none !important; transition: none !important; }
+
+/* =========================================================
+   Animaciones táctiles (celular)
+   ========================================================= */
+@keyframes desde-derecha   { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
+@keyframes desde-izquierda { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: none; } }
+@keyframes onda    { from { transform: scale(0); opacity: .45; } to { transform: scale(1); opacity: 0; } }
+@keyframes temblar { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@keyframes caer    { 0% { transform: translate(0, -20px) rotate(0); opacity: 1; }
+                     100% { transform: translate(var(--deriva), 105vh) rotate(var(--giro)); opacity: .9; } }
+@keyframes suave   { from { opacity: 0; } to { opacity: 1; } }
+
+/* Onda al tocar */
+.opcion, .btn, .contacto, .enlace-icono, .selector button, .atras { position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+.onda {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: currentColor; opacity: 0;
+  animation: onda .6s ease-out;
+}
+.btn-principal .onda, .opcion:not(.opcion-clara) .onda, .contacto-whatsapp .onda { background: #fff; }
+
+/* Aviso de error que tiembla */
+.error-form.temblar { animation: temblar .45s ease; }
+
+/* Confeti */
+.confeti { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+.confeti i {
+  position: absolute; top: -20px; border-radius: 2px;
+  animation: caer 2s cubic-bezier(.25,.6,.4,1) both;
+}
+
+/* Carnet que se inclina con el dedo */
+.marco-carnet {
+  --rx: 0deg; --ry: 0deg;
+  perspective: 900px;
+  touch-action: pan-y;               /* deja bajar la página con el dedo */
+}
+.marco-carnet > div {
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.marco-carnet.inclinado > div { transition: transform .08s linear; }
+@media (prefers-reduced-motion: no-preference) {
+  .marco-carnet > #carnet-v, .marco-carnet > #carnet-h { animation: none; }
+  .marco-carnet { animation: aparecer .8s cubic-bezier(.2,.8,.2,1) both; }
+  .marco-carnet > div { transform: rotateX(var(--rx)) rotateY(var(--ry)); }
+  .marco-carnet > div::before {        /* reflejo de luz que sigue al dedo */
+    content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    background: radial-gradient(circle at var(--luz-x, 50%) var(--luz-y, 50%), rgba(255,255,255,.35), transparent 55%);
+    opacity: 0; transition: opacity .3s;
+  }
+  .marco-carnet.inclinado > div::before { opacity: 1; }
+}
+
+/* Si el celular pide "reducir movimiento": sin desplazamientos, solo aparecer suave */
+@media (prefers-reduced-motion: reduce) {
+  .panel, .hero-texto, .muestra, .marco-carnet, .icono-estado { animation: suave .35s ease both; }
+}
+/* La imagen descargada sale derecha, sin inclinación ni reflejo */
+.sin-animacion .marco-carnet > div { transform: none !important; }
+.sin-animacion .marco-carnet > div::before { display: none; }
