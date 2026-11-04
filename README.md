@@ -8,7 +8,8 @@ Página web donde los afiliados de ADEP crean y ven su carnet digital.
   (Ley 8968). Solo se puede si la cédula está en la lista de afiliados activos de ADEP.
 - **Cambiar mi foto:** desde su carnet, el afiliado puede tomarse otra foto. La nueva reemplaza a la
   anterior en todos los celulares donde abra su carnet.
-- **Carnets sin foto** (creados antes, o si ADEP borró la foto): al entrar se le pide tomarse una.
+- **Carnets sin foto** (creados antes, o si ADEP borró la foto): la foto es **obligatoria**. Al entrar
+  se le pide tomarse una, y el carnet no se muestra hasta que la suba (también lo valida el servidor).
 - **Ver mi carnet:** cédula + fecha de nacimiento.
 - **Recordar en este celular:** después de entrar una vez, el carnet aparece directo al abrir la página.
 - El carnet se puede ver vertical u horizontal, descargar como imagen o imprimir.
@@ -74,7 +75,7 @@ Datos de prueba:
 
 | Cédula      | Fecha de nacimiento | Qué pasa                                        |
 |-------------|---------------------|-------------------------------------------------|
-| 1-0234-0567 | 14 marzo 1958       | Ya tiene carnet, sin foto: le pide agregarla    |
+| 1-0234-0567 | 14 marzo 1958       | Ya tiene carnet, sin foto: debe agregarla para verlo |
 | 2-0456-0789 | (la que usted elija) | Afiliado sin carnet: puede crearlo             |
 | 4-0111-0222 | (la que usted elija) | Afiliado sin carnet: puede crearlo             |
 | 3-0321-0654 | —                   | Inactiva: "No encontramos su afiliación"        |

@@ -337,24 +337,29 @@ function mostrarError(form, mensaje) {
   error.classList.remove("oculto");
 }
 
-function terminar(form, carnet, recordar) {
-  if (recordar) token.guardar(carnet.token);
+// estado "ok" → muestra el carnet; "sin-foto" → carnet sin foto: debe agregarla antes de verlo.
+function terminar(form, r, recordar) {
+  if (recordar) token.guardar(r.carnet.token);
   else token.borrar();
   form.reset();
   fotoCrear.limpiar();
-  // Carnets creados antes de que existieran las fotos: se les pide la foto al entrar.
-  if (carnet.foto) mostrarCarnet(carnet);
-  else pedirFoto(carnet, false);
+  if (r.estado === "ok") mostrarCarnet(r.carnet);
+  else pedirFoto(r.carnet, false);
 }
 
 // --- Agregar o cambiar la foto ---
+// cambiar = true: el afiliado quiere cambiar su foto (puede cancelar).
+// cambiar = false: su carnet no tiene foto y es obligatorio agregarla para verlo.
+let cambiandoFoto = false;
+
 function pedirFoto(carnet, cambiar) {
   carnetActual = carnet;
+  cambiandoFoto = cambiar;
   $("foto-titulo").textContent = cambiar ? "Cambiar mi foto" : "Agregue su foto";
   $("foto-texto").textContent = cambiar
     ? "La nueva foto reemplaza a la anterior en todos los celulares donde abra su carnet."
-    : "Ahora el carnet lleva la foto de su rostro. Tómesela una sola vez y quedará guardada.";
-  $("foto-despues").textContent = cambiar ? "Cancelar" : "Ahora no, ver mi carnet";
+    : `${carnet.nombre.split(" ")[0]}, ahora el carnet lleva la foto de su rostro. Para ver su carnet, primero tómese la foto. Solo se hace una vez.`;
+  $("foto-despues").textContent = cambiar ? "Cancelar" : "Salir";
   fotoActualizar.limpiar();
   $("foto-consentimiento").checked = false;
   $("form-foto").querySelector(".error-form").classList.add("oculto");
@@ -380,7 +385,12 @@ $("form-foto").addEventListener("submit", async e => {
   }
 });
 
-$("foto-despues").addEventListener("click", () => mostrarCarnet(carnetActual));
+$("foto-despues").addEventListener("click", () => {
+  if (cambiandoFoto) return mostrarCarnet(carnetActual);
+  token.borrar();
+  carnetActual = null;
+  mostrar("paso-inicio");
+});
 $("btn-cambiar-foto").addEventListener("click", () => pedirFoto(carnetActual, true));
 
 $("form-ingresar").addEventListener("submit", async e => {
@@ -393,7 +403,7 @@ $("form-ingresar").addEventListener("submit", async e => {
   if (!nacimiento) return mostrarError(form, "Elija el día, el mes y el año de su nacimiento.");
 
   const r = await enviar(form, "/api/ingresar", { cedula, nacimiento });
-  if (r.estado === "ok") terminar(form, r.carnet, $("ingresar-recordar").checked);
+  if (r.estado === "ok" || r.estado === "sin-foto") terminar(form, r, $("ingresar-recordar").checked);
   else if (r.estado === "no-afiliado") avisoNoAfiliado();
   else if (r.estado === "fecha-incorrecta") mostrarError(form, "La fecha de nacimiento no coincide con la que registró al crear su carnet.");
   else if (r.estado === "sin-carnet") aviso({
@@ -421,7 +431,7 @@ $("form-crear").addEventListener("submit", async e => {
   if (!$("crear-consentimiento").checked) return mostrarError(form, "Marque la casilla de autorización para guardar su foto.");
 
   const r = await enviar(form, "/api/crear", { cedula, nombre, filial, nacimiento, foto, consentimiento: true });
-  if (r.estado === "ok") terminar(form, r.carnet, $("crear-recordar").checked);
+  if (r.estado === "ok") terminar(form, r, $("crear-recordar").checked);
   else if (r.estado === "no-afiliado") avisoNoAfiliado();
   else if (r.estado === "ya-existe") aviso({
     icono: "🪪",
@@ -474,7 +484,8 @@ async function iniciar() {
       body: JSON.stringify({ token: guardado })
     });
     const r = await res.json();
-    if (r.estado === "ok") return r.carnet.foto ? mostrarCarnet(r.carnet) : pedirFoto(r.carnet, false);
+    if (r.estado === "ok") return mostrarCarnet(r.carnet);
+    if (r.estado === "sin-foto") return pedirFoto(r.carnet, false);
     if (res.status === 401) token.borrar();
   } catch {
     // Sin conexión: se muestra el inicio

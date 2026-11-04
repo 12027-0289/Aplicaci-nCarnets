@@ -33,5 +33,9 @@ export async function onRequestPost({ request, env }) {
     return json({ estado: "fecha-incorrecta" });
   }
 
-  return json({ estado: "ok", carnet: await datosCarnet(env, carnet) });
+  // La foto es obligatoria: sin foto solo se devuelve lo necesario para subirla.
+  const datos = await datosCarnet(env, carnet);
+  if (!datos.foto) return json({ estado: "sin-foto", carnet: { token: datos.token, nombre: datos.nombre } });
+
+  return json({ estado: "ok", carnet: datos });
 }
