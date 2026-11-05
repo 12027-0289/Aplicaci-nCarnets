@@ -2,7 +2,7 @@
 // Muestra si el carnet es válido HOY (consulta la lista de afiliados en ese momento),
 // con la foto y el nombre para comparar con la persona. La cédula se muestra incompleta.
 
-import { codigoValido, leerFotoGuardada } from "../../lib/comun.js";
+import { codigoValido, leerFotoGuardada, buscarCarnet } from "../../lib/comun.js";
 
 const escapar = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const cedulaParcial = c => `•-••••-${c.slice(5)}`;
@@ -11,12 +11,7 @@ export async function onRequestGet({ params, env }) {
   const codigo = String(params.codigo ?? "").toUpperCase();
   let carnet = null;
   if (codigoValido(codigo)) {
-    carnet = await env.DB
-      .prepare(`SELECT c.*, COALESCE(a.activo, 0) AS activo FROM carnets c
-                LEFT JOIN afiliados a ON a.cedula = c.cedula
-                WHERE c.verificacion = ?`)
-      .bind(codigo)
-      .first();
+    carnet = await buscarCarnet(env, { verificacion: `eq.${codigo}` });
   }
 
   const ahora = new Date().toLocaleString("es-CR", {
@@ -24,7 +19,7 @@ export async function onRequestGet({ params, env }) {
   });
 
   let contenido;
-  if (carnet && carnet.activo === 1) {
+  if (carnet && carnet.activo) {
     const foto = await leerFotoGuardada(env, carnet);
     contenido = `
       <div class="estado estado-ok" role="status">

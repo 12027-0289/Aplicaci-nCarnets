@@ -5,6 +5,7 @@ import {
   json, leerCuerpo, leerCedula, leerFecha, estaBloqueado, registrarFallo,
   esAfiliadoActivo, datosCarnet, leerFoto, guardarFoto, MENSAJE_BLOQUEO, MENSAJE_CONSENTIMIENTO
 } from "../../lib/comun.js";
+import { supabase } from "../../lib/supabase.js";
 
 export async function onRequestPost({ request, env }) {
   const cuerpo = await leerCuerpo(request);
@@ -24,10 +25,8 @@ export async function onRequestPost({ request, env }) {
 
   if (await estaBloqueado(env, request)) return json({ error: MENSAJE_BLOQUEO }, 429);
 
-  const filialValida = await env.DB
-    .prepare("SELECT 1 FROM filiales WHERE nombre = ?")
-    .bind(filial)
-    .first();
+  const db = supabase(env);
+  const filialValida = await db.uno("carnet_filiales", { nombre: `eq.${filial}` }, "nombre");
   if (!filialValida) return json({ error: "Elija su filial de la lista." }, 400);
 
   if (!(await esAfiliadoActivo(env, cedula))) {
@@ -35,10 +34,7 @@ export async function onRequestPost({ request, env }) {
     return json({ estado: "no-afiliado" });
   }
 
-  const existente = await env.DB
-    .prepare("SELECT 1 FROM carnets WHERE cedula = ?")
-    .bind(cedula)
-    .first();
+  const existente = await db.uno("carnet_carnets", { cedula: `eq.${cedula}` }, "cedula");
   if (existente) return json({ estado: "ya-existe" });
 
   const carnet = {
@@ -50,10 +46,8 @@ export async function onRequestPost({ request, env }) {
     creado: new Date().toISOString().slice(0, 10)
   };
 
-  await env.DB
-    .prepare("INSERT INTO carnets (cedula, nombre, filial, nacimiento, token, creado) VALUES (?, ?, ?, ?, ?, ?)")
-    .bind(carnet.cedula, carnet.nombre, carnet.filial, carnet.nacimiento, carnet.token, carnet.creado)
-    .run();
+  // Si dos personas crean el mismo carnet a la vez, la segunda recibe "ya existe"
+  if (!(await db.insertar("carnet_carnets", carnet))) return json({ estado: "ya-existe" });
   await guardarFoto(env, cedula, foto);
   carnet.foto = true;
 

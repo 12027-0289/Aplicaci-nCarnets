@@ -2,19 +2,16 @@
   "name": "carnet-adep",
   "version": "1.0.0",
   "private": true,
-  "description": "Carnet digital para afiliados de ADEP (Cloudflare Pages + D1)",
+  "description": "Carnet digital para afiliados de ADEP (Cloudflare Pages + Supabase)",
   "type": "module",
   "scripts": {
     "dev": "wrangler pages dev",
-    "db:reiniciar-local": "node -e \"require('fs').rmSync('.wrangler/state',{recursive:true,force:true})\" && npm run db:crear-local && npm run db:ejemplo-local",
-    "db:crear-local": "wrangler d1 execute carnet-adep --local --file=schema.sql",
-    "db:ejemplo-local": "node scripts/importar.mjs datos/ejemplo-afiliados.csv datos/ejemplo-filiales.txt datos/ejemplo.sql && wrangler d1 execute carnet-adep --local --file=datos/ejemplo.sql && wrangler d1 execute carnet-adep --local --file=datos/ejemplo-carnets.sql",
-    "importar": "node scripts/importar.mjs datos/afiliados.csv datos/filiales.txt datos/importar.sql",
-    "db:subir-local": "wrangler d1 execute carnet-adep --local --file=datos/importar.sql",
-    "db:crear": "wrangler d1 execute carnet-adep --remote --file=schema.sql",
-    "db:subir": "wrangler d1 execute carnet-adep --remote --file=datos/importar.sql",
-    "publicar": "wrangler pages deploy",
-    "borrar-foto": "node scripts/borrar-foto.mjs"
+    "db:ejemplo": "node scripts/ejemplo.mjs",
+    "importar": "node scripts/importar.mjs datos/afiliados.csv datos/filiales.txt",
+    "db:subir-prueba": "node scripts/importar.mjs datos/afiliados.csv datos/filiales.txt --subir",
+    "db:subir": "node scripts/importar.mjs datos/afiliados.csv datos/filiales.txt --subir --produccion",
+    "borrar-foto": "node scripts/borrar-foto.mjs --produccion",
+    "publicar": "wrangler pages deploy"
   },
   "devDependencies": {
     "wrangler": "4.149.0"
