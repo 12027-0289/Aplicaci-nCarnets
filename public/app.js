@@ -115,8 +115,8 @@ const fechaCrear = crearSelectorFecha($("crear-fecha"));
 // --- Foto del rostro ---
 // La foto se recorta a 3:4 (como foto de carnet) y se comprime en el celular
 // antes de enviarla, para que suba rápido aunque la señal sea mala.
-const FOTO_ANCHO = 480;
-const FOTO_ALTO = 640;
+const FOTO_ANCHO = 360;     // ~30 KB por foto: así caben unas 60 000 en el plan gratis de Cloudflare
+const FOTO_ALTO = 480;
 
 function recortarFoto(fuente, ancho, alto, espejo = false) {
   const canvas = document.createElement("canvas");
@@ -128,7 +128,7 @@ function recortarFoto(fuente, ancho, alto, espejo = false) {
   const w = FOTO_ANCHO / escala, h = FOTO_ALTO / escala;
   if (espejo) { ctx.translate(FOTO_ANCHO, 0); ctx.scale(-1, 1); }
   ctx.drawImage(fuente, (ancho - w) / 2, (alto - h) / 2, w, h, 0, 0, FOTO_ANCHO, FOTO_ALTO);
-  return canvas.toDataURL("image/jpeg", 0.85);
+  return canvas.toDataURL("image/jpeg", 0.8);
 }
 
 function fotoDeArchivo(archivo) {

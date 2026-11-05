@@ -5,6 +5,7 @@
 //        npm run borrar-foto -- 1-0234-0567 --local    (en la prueba local)
 
 import { execFileSync } from "node:child_process";
+import { numeroBaseFotos } from "../lib/comun.js";
 
 const cedula = String(process.argv[2] ?? "").replace(/\D/g, "");
 const donde = process.argv.includes("--local") ? "--local" : "--remote";
@@ -17,9 +18,9 @@ if (cedula.length !== 9) {
 // En Windows, npx necesita la terminal (shell) y el texto con espacios va entre comillas.
 const windows = process.platform === "win32";
 const wrangler = (...args) => execFileSync("npx", ["wrangler", ...args], { stdio: "inherit", shell: windows });
-const sql = `UPDATE carnets SET foto = NULL WHERE cedula = '${cedula}'`;
+const comando = sql => windows ? `"${sql}"` : sql;
 
-wrangler("d1", "execute", "carnet-adep", donde, "--command", windows ? `"${sql}"` : sql);
-wrangler("r2", "object", "delete", `carnet-adep-fotos/fotos/${cedula}.jpg`, donde);
+wrangler("d1", "execute", "carnet-adep", donde, "--command", comando(`UPDATE carnets SET foto = NULL WHERE cedula = '${cedula}'`));
+wrangler("d1", "execute", `carnet-adep-fotos-${numeroBaseFotos(cedula)}`, donde, "--command", comando(`DELETE FROM fotos WHERE cedula = '${cedula}'`));
 
 console.log(`\nListo: se borró la foto de la cédula ${cedula}. Se le pedirá una nueva al abrir su carnet.`);

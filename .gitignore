@@ -5,3 +5,6 @@ node_modules/
 datos/afiliados.csv
 datos/importar.sql
 datos/ejemplo.sql
+
+# Respaldos de las bases de datos (tienen datos personales)
+respaldos/

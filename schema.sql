@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS carnets (
   foto       TEXT,                   -- fecha y hora en que subió su foto (NULL = sin foto)
   consentimiento TEXT                -- fecha y hora en que autorizó guardar su foto
 );
--- La foto en sí se guarda en Cloudflare R2 (bucket "carnet-adep-fotos") como fotos/<cedula>.jpg
+-- La foto en sí se guarda en una de las 4 bases de fotos (schema-fotos.sql), según la cédula.
 
 -- Intentos fallidos por IP, para frenar a quien pruebe muchas fechas o cédulas.
 CREATE TABLE IF NOT EXISTS intentos (

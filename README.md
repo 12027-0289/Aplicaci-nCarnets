@@ -21,8 +21,17 @@ Página web donde los afiliados de ADEP crean y ven su carnet digital.
 - El carnet (formato vertical) se puede descargar como imagen o imprimir.
 - Si la cédula no está en la lista, se le ofrece escribir por WhatsApp para afiliarse.
 
-Funciona en **Cloudflare Pages + D1 + R2**: gratis, siempre encendido y no se apaga por inactividad.
-Las fotos se guardan en **Cloudflare R2** (gratis hasta 10 GB, más de 100 000 fotos).
+Funciona en **Cloudflare Pages + D1**: gratis, **sin tarjeta**, siempre encendido y no se apaga por inactividad.
+
+```
+Celular del afiliado ──► Cloudflare Pages (página + funciones /api y /v)
+                              ├─ D1 "carnet-adep"           → afiliados, filiales, carnets, intentos
+                              └─ D1 "carnet-adep-fotos-1…4" → fotos (repartidas en 4 bases)
+```
+
+Las fotos se guardan en 4 bases D1 porque en el plan gratis cada base admite 500 MB: en total caben
+**unas 60 000 fotos** de ~30 KB. A cada cédula le toca siempre la misma base (cédula % 4 + 1).
+**Para entregar el proyecto a TI**, vea [`GUIA-TI.md`](GUIA-TI.md).
 
 ## Cómo está hecho
 
@@ -46,7 +55,11 @@ functions/api/            → lo que corre en el servidor
   carnet.js               → "recordar en este celular"
   filiales.js             → lista de filiales
 lib/comun.js              → funciones compartidas
-schema.sql                → crea las tablas de la base de datos
+schema.sql                → tablas de la base de datos principal (carnet-adep)
+schema-fotos.sql          → tabla de fotos (igual en las 4 bases de fotos)
+scripts/configurar.mjs    → crea las 5 bases en Cloudflare la primera vez (npm run configurar)
+scripts/tablas.mjs        → crea las tablas en las 5 bases
+scripts/respaldo.mjs      → descarga una copia de las 5 bases (npm run respaldo)
 scripts/importar.mjs      → prepara la lista de cédulas y filiales para subirla
 scripts/borrar-foto.mjs   → borra la foto de un afiliado (fotos inadecuadas)
 datos/                    → ejemplos de cómo deben venir las listas
@@ -67,7 +80,7 @@ del botón "Mostrar código QR".
 Es distinto de la clave secreta que usa "Recordar en este celular", así que escanear el QR no permite
 entrar al carnet de nadie.
 
-Las fotos están en R2 como `fotos/<cédula>.jpg` (480 × 640 px, unos 50–100 KB cada una). El celular
+Las fotos están en la tabla `fotos` de su base (360 × 480 px, unos 30 KB cada una). El celular
 recorta y comprime la foto antes de enviarla, así sube rápido aunque la señal sea mala.
 
 Tras 10 intentos fallidos en 15 minutos desde la misma conexión, se bloquean los intentos por un rato.
@@ -112,22 +125,14 @@ la cámara: use "Elegir de mis fotos".
    ```
    npx wrangler login
    ```
-3. Cree la base de datos:
+3. Cree las 5 bases de datos y sus tablas (no pide tarjeta):
    ```
-   npx wrangler d1 create carnet-adep
+   npm run configurar
    ```
-   Copie el `database_id` que aparece y péguelo en `wrangler.toml`, en lugar de los ceros.
-4. Cree el espacio para las fotos (R2). La primera vez, Cloudflare le pide activar R2 en
-   https://dash.cloudflare.com → **R2** y registrar una tarjeta; no cobra nada mientras no pase de 10 GB.
-   ```
-   npx wrangler r2 bucket create carnet-adep-fotos
-   ```
-5. Cree las tablas en la base de datos de Cloudflare:
-   ```
-   npm run db:crear
-   ```
-6. Cargue la lista de afiliados y filiales (vea la sección 4).
-7. Publique la página:
+   Esto anota los IDs de las bases en `wrangler.toml`. **Guarde ese cambio en GitHub** (commit y push),
+   porque `npm run publicar` los necesita.
+4. Cargue la lista de afiliados y filiales (vea la sección 4).
+5. Publique la página:
    ```
    npm run publicar
    ```
@@ -164,16 +169,34 @@ pedirá tomarse una nueva. Si tiene su número, avísele por WhatsApp.
 npm run borrar-foto -- 1-0234-0567
 ```
 
-**Un afiliado dice que otra persona creó su carnet, o se equivocó en sus datos:** borre su carnet para
-que lo cree de nuevo (cambie la cédula, sin guiones). El segundo comando borra también su foto:
+**Un afiliado dice que otra persona creó su carnet, o se equivocó en sus datos:** borre su foto y su
+carnet para que lo cree de nuevo (cambie la cédula; en el segundo comando va sin guiones):
 ```
+npm run borrar-foto -- 1-0234-0567
 npx wrangler d1 execute carnet-adep --remote --command "DELETE FROM carnets WHERE cedula = '102340567'"
-npx wrangler r2 object delete carnet-adep-fotos/fotos/102340567.jpg --remote
 ```
+
+**Corregir el nombre o la filial** (sin borrar el carnet):
+```
+npx wrangler d1 execute carnet-adep --remote --command "UPDATE carnets SET nombre = 'Nombre Correcto' WHERE cedula = '102340567'"
+```
+También se puede desde el panel: https://dash.cloudflare.com → **Storage & Databases → D1 → carnet-adep → Console**.
 
 **Ver cuántos carnets se han creado:**
 ```
 npx wrangler d1 execute carnet-adep --remote --command "SELECT COUNT(*) AS carnets FROM carnets"
+```
+
+**Respaldo** (copia de datos y fotos en la carpeta `respaldos/`, que nunca se sube a GitHub):
+```
+npm run respaldo
+```
+Cloudflare además guarda automáticamente el historial de cada base de los últimos días (**Time Travel**),
+para volver atrás si algo se borra por error: `npx wrangler d1 time-travel info carnet-adep`.
+
+**Espacio usado** (cada base gratis admite 500 MB):
+```
+npx wrangler d1 info carnet-adep-fotos-1
 ```
 
 ## 6. Antes de publicar
