@@ -347,19 +347,6 @@ input::placeholder { color: #9aa9a0; }
 .vista-carnet { max-width: 600px; text-align: center; }
 .vista-carnet h2 { color: var(--verde-oscuro); font-size: 30px; font-weight: 800; margin: 0 0 6px; }
 .vista-carnet .sub { margin-bottom: 20px; }
-.selector {
-  display: inline-flex;
-  background: var(--fondo);
-  border-radius: 999px;
-  padding: 4px;
-  margin-bottom: 22px;
-}
-.selector button {
-  font: inherit; font-size: 17px; font-weight: 700;
-  border: none; background: none; color: var(--texto-suave);
-  padding: 10px 22px; border-radius: 999px; cursor: pointer;
-}
-.selector button.activo-sel { background: var(--blanco); color: var(--verde-oscuro); box-shadow: 0 1px 4px rgba(7,58,31,.15); }
 
 .botones-carnet { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
 .botones-carnet .btn { flex: 1 1 160px; max-width: 260px; white-space: nowrap; width: auto; }
@@ -377,97 +364,7 @@ input::placeholder { color: #9aa9a0; }
 #btn-salir { color: var(--texto-suave); }
 
 /* ---------- Plantilla del carnet (PROVISIONAL) ---------- */
-.carnet {
-  position: relative;
-  width: 100%;
-  max-width: 500px;
-  aspect-ratio: 85.6 / 54;
-  margin: 0 auto;
-  border-radius: 18px;
-  overflow: hidden;
-  color: #fff;
-  text-align: left;
-  background: linear-gradient(135deg, #0b4f2a 0%, #128a3e 60%, #1ea552 100%);
-  box-shadow: 0 18px 40px rgba(11,79,42,.35);
-  container-type: inline-size;
-}
-.carnet .marca-agua {
-  position: absolute;
-  right: -12%;
-  top: 50%;
-  width: 62%;
-  transform: translateY(-50%);
-  opacity: .09;
-  pointer-events: none;
-}
-.carnet .franja {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: 4.5cqw;
-  background: var(--rojo);
-}
-.carnet .franja::before {
-  content: ""; position: absolute; left: 0; right: 0; top: -1.2cqw;
-  height: 1.2cqw; background: #fff;
-}
-.carnet-contenido {
-  position: relative;
-  height: 100%;
-  padding: 4.5cqw 6cqw 9cqw;
-  display: flex;
-  flex-direction: column;
-}
-.carnet-top { display: flex; align-items: center; gap: 3cqw; }
-.carnet-top .logo { width: 12cqw; height: 12cqw; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
-.carnet-org strong { display: block; font-size: 5.6cqw; font-weight: 800; letter-spacing: .02em; line-height: 1; }
-.carnet-org span { display: block; font-size: 2.4cqw; line-height: 1.25; opacity: .9; margin-top: .8cqw; }
-.carnet-tipo {
-  margin-left: auto;
-  align-self: flex-start;
-  font-size: 2.3cqw;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.3);
-  padding: 1.2cqw 2.4cqw;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-.carnet-cuerpo {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  gap: 4.5cqw;
-  margin-top: 3.5cqw;
-  min-height: 0;
-}
-.carnet-foto {
-  width: 24cqw;
-  aspect-ratio: 3 / 4;
-  flex-shrink: 0;
-  border-radius: 2.4cqw;
-  border: .9cqw solid #fff;
-  background: rgba(255,255,255,.18);
-  overflow: hidden;
-  display: grid; place-items: center;
-  font-size: 8cqw; font-weight: 800;
-  box-shadow: 0 1cqw 3cqw rgba(0,0,0,.25);
-}
-.carnet-foto img, .cv-foto img { width: 100%; height: 100%; display: block; }
-.carnet-info { flex: 1; min-width: 0; }
-.carnet-nombre {
-  font-size: 5cqw;
-  font-weight: 800;
-  line-height: 1.1;
-  text-shadow: 0 2px 6px rgba(0,0,0,.2);
-}
-.carnet-datos { display: flex; gap: 6cqw; margin-top: 2.5cqw; }
-.carnet-dato small {
-  display: block; font-size: 2.2cqw; text-transform: uppercase;
-  letter-spacing: .1em; opacity: .75; font-weight: 600;
-}
-.carnet-dato b { display: block; font-size: 3.6cqw; font-weight: 700; margin-top: .5cqw; }
-.carnet-pie { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; margin-top: 3cqw; }
+.cv-foto img { width: 100%; height: 100%; display: block; }
 .activo {
   display: inline-flex; align-items: center; gap: 1.4cqw;
   background: #fff; color: var(--verde-oscuro);
@@ -628,11 +525,10 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 /* ---------- Impresión ---------- */
 @media print {
   body { background: #fff; }
-  .hero, footer, .vista-carnet h2, .vista-carnet .sub, .botones-carnet, .acciones-secundarias, .selector, .camara { display: none !important; }
+  .hero, footer, .vista-carnet h2, .vista-carnet .sub, .botones-carnet, .acciones-secundarias, .camara { display: none !important; }
   main { margin: 0; padding: 0; }
   .panel { box-shadow: none; padding: 0; }
   .carnet-v { box-shadow: none; width: 54mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .carnet { box-shadow: none; width: 85.6mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* =========================================================
@@ -681,8 +577,8 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
   .foto-vista.con-foto img { animation: saltar .45s cubic-bezier(.2,.8,.2,1) both; }
 
   /* El carnet aparece girando y le pasa un brillo */
-  #carnet-v, #carnet-h { animation: aparecer .8s cubic-bezier(.2,.8,.2,1) both; }
-  #carnet-v::after, #carnet-h::after {
+  #carnet-v { animation: aparecer .8s cubic-bezier(.2,.8,.2,1) both; }
+  #carnet-v::after {
     content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
     pointer-events: none; opacity: 0;
@@ -711,7 +607,7 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 @keyframes suave   { from { opacity: 0; } to { opacity: 1; } }
 
 /* Onda al tocar */
-.opcion, .btn, .contacto, .enlace-icono, .selector button, .atras { position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+.opcion, .btn, .contacto, .enlace-icono, .atras { position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
 .onda {
   position: absolute; border-radius: 50%; pointer-events: none;
   background: currentColor; opacity: 0;
@@ -740,7 +636,7 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 }
 .marco-carnet.inclinado > div { transition: transform .08s linear; }
 @media (prefers-reduced-motion: no-preference) {
-  .marco-carnet > #carnet-v, .marco-carnet > #carnet-h { animation: none; }
+  .marco-carnet > #carnet-v { animation: none; }
   .marco-carnet { animation: aparecer .8s cubic-bezier(.2,.8,.2,1) both; }
   .marco-carnet > div { transform: rotateX(var(--rx)) rotateY(var(--ry)); }
   .marco-carnet > div::before {        /* reflejo de luz que sigue al dedo */

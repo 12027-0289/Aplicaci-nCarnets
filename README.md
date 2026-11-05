@@ -18,7 +18,7 @@ Página web donde los afiliados de ADEP crean y ven su carnet digital.
 - **App instalable y sin internet:** se puede instalar en el celular como una app (Android: botón
   "Instalar"; iPhone: instrucciones). Si eligió "Recordar en este celular", el carnet se ve aunque no haya señal.
 - **Política de privacidad** en `/privacidad` (Ley 8968), enlazada desde la autorización de la foto y el pie de página.
-- El carnet se puede ver vertical u horizontal, descargar como imagen o imprimir.
+- El carnet (formato vertical) se puede descargar como imagen o imprimir.
 - Si la cédula no está en la lista, se le ofrece escribir por WhatsApp para afiliarse.
 
 Funciona en **Cloudflare Pages + D1 + R2**: gratis, siempre encendido y no se apaga por inactividad.
@@ -188,7 +188,7 @@ npx wrangler d1 execute carnet-adep --remote --command "SELECT COUNT(*) AS carne
 
 - **Plantilla del carnet:** la actual es **provisional**. En `public/index.html` está entre las marcas
   `PLANTILLA PROVISIONAL` y `FIN DE LA PLANTILLA PROVISIONAL`; sus estilos están en `public/estilos.css`
-  (`.carnet…` horizontal y `.cv-…` vertical). Los datos se llenan solos en los elementos con
+  (clases `.carnet-v` y `.cv-…`). Los datos se llenan solos en los elementos con
   `data-campo="nombre|cedula|filial|emitido"` y la foto en los que tienen `data-foto`.
 - **Texto de autorización de la foto:** en `public/index.html` (busque "Autorizo a ADEP"). Conviene que
   ADEP lo revise.

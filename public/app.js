@@ -18,7 +18,7 @@ function vibrar(patron) {
 
 // Onda que sale desde donde toca el dedo
 document.addEventListener("pointerdown", e => {
-  const el = e.target.closest(".opcion, .btn, .contacto, .enlace-icono, .selector button, .atras");
+  const el = e.target.closest(".opcion, .btn, .contacto, .enlace-icono, .atras");
   if (!el || el.disabled || movimientoReducido()) return;
   const caja = el.getBoundingClientRect();
   const tam = Math.max(caja.width, caja.height) * 2.2;
@@ -538,21 +538,14 @@ $("form-crear").addEventListener("submit", async e => {
   });
 });
 
-// --- Carnet: formato, descarga y salir ---
-document.querySelectorAll("[data-formato]").forEach(b => b.addEventListener("click", () => {
-  const vertical = b.dataset.formato === "v";
-  $("carnet-v").classList.toggle("oculto", !vertical);
-  $("carnet-h").classList.toggle("oculto", vertical);
-  document.querySelectorAll("[data-formato]").forEach(x => x.classList.toggle("activo-sel", x === b));
-}));
+// --- Carnet: descarga y salir ---
 
 $("btn-descargar").addEventListener("click", async () => {
   if (typeof html2canvas === "undefined") {
     alert("No se pudo cargar la herramienta de descarga. Puede usar Imprimir → Guardar como PDF.");
     return;
   }
-  const visible = $("carnet-h").classList.contains("oculto") ? $("carnet-v") : $("carnet-h");
-  const canvas = await html2canvas(visible, {
+  const canvas = await html2canvas($("carnet-v"), {
     scale: 3,
     backgroundColor: null,
     // En la copia que se convierte en imagen, sin animaciones (si no, el carnet saldría a medio aparecer)
@@ -573,10 +566,9 @@ $("btn-salir").addEventListener("click", () => {
 // --- Carnet en 3D: se inclina siguiendo el dedo y vuelve a su lugar al soltar ---
 (() => {
   const marco = $("marco-carnet");
-  const visible = () => $("carnet-h").classList.contains("oculto") ? $("carnet-v") : $("carnet-h");
   function inclinar(e) {
     if (movimientoReducido()) return;
-    const caja = visible().getBoundingClientRect();
+    const caja = $("carnet-v").getBoundingClientRect();
     const x = (e.clientX - caja.left) / caja.width - .5;
     const y = (e.clientY - caja.top) / caja.height - .5;
     if (Math.abs(x) > .6 || Math.abs(y) > .6) return soltar();
