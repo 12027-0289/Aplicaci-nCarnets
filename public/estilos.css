@@ -758,3 +758,133 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 /* La imagen descargada sale derecha, sin inclinación ni reflejo */
 .sin-animacion .marco-carnet > div { transform: none !important; }
 .sin-animacion .marco-carnet > div::before { display: none; }
+
+/* =========================================================
+   Código QR en el carnet (parte de la plantilla provisional)
+   ========================================================= */
+.cv-pie { display: flex; align-items: center; justify-content: center; gap: 4cqw; text-align: left; }
+.cv-pie-texto { display: flex; flex-direction: column; align-items: flex-start; gap: 1.2cqw; }
+.cv-pie .emitido { margin-top: 0; }
+.qr-leyenda { font-size: 2.6cqw; color: var(--texto-suave); font-weight: 600; }
+.cv-qr, .carnet-qr {
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 1.6cqw;
+}
+.cv-qr { width: 21cqw; padding: 1.4cqw; border: 1px solid var(--borde); }
+.carnet-qr { width: 13.5cqw; padding: 1cqw; margin-left: auto; align-self: flex-start; box-shadow: 0 1cqw 3cqw rgba(0,0,0,.2); }
+/* Horizontal: la etiqueta "Carnet de afiliado" va encima del nombre (arriba a la derecha está el QR) */
+.carnet-info .carnet-tipo {
+  display: inline-block; margin: 0 0 1.6cqw; padding: .8cqw 2cqw;
+  font-size: 2.1cqw; align-self: auto;
+}
+.carnet-info .carnet-nombre { font-size: 4.7cqw; }
+.carnet-foto { width: 22cqw; }
+.cv-qr:empty, .carnet-qr:empty { display: none; }
+.cv-qr img, .carnet-qr img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+
+/* =========================================================
+   Vista del carnet: avisos, QR, instalar
+   ========================================================= */
+a.marca { color: inherit; text-decoration: none; }
+.aviso-offline {
+  display: flex; gap: 10px; align-items: center; text-align: left;
+  margin: 0 0 18px; padding: 12px 14px; border-radius: 12px;
+  background: #fff6db; color: #6b4e00; font-size: 16px; font-weight: 600; line-height: 1.4;
+}
+.aviso-offline .ico { width: 24px; height: 24px; }
+.nota-qr {
+  display: flex; gap: 8px; align-items: flex-start; justify-content: center; text-align: left;
+  margin: 18px auto 0; max-width: 440px; font-size: 15.5px; line-height: 1.45; color: var(--texto-suave);
+}
+.nota-qr .ico { color: var(--verde); margin-top: 1px; }
+
+.instalar {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  margin-top: 20px; padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--verde-claro), #f6fbf7);
+  border: 1px solid #cfe6d6;
+}
+.instalar-icono {
+  width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px;
+  display: grid; place-items: center; background: var(--verde); color: #fff;
+}
+.instalar-icono .ico { width: 28px; height: 28px; }
+.instalar-texto { flex: 1; min-width: 0; }
+.instalar-texto strong { display: block; font-size: 18px; color: var(--verde-oscuro); line-height: 1.25; }
+.instalar-texto span { display: block; font-size: 15.5px; color: var(--texto-suave); margin-top: 3px; line-height: 1.4; }
+.instalar .btn { width: auto; flex-shrink: 0; padding: 13px 18px; }
+@media (max-width: 440px) {
+  .instalar { flex-wrap: wrap; }
+  .instalar .btn { width: 100%; }
+}
+
+.dialogo {
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(7,30,16,.55);
+  display: grid; place-items: end center;
+  padding: 16px;
+}
+.dialogo-caja {
+  width: min(100%, 460px);
+  background: #fff; border-radius: 22px; padding: 26px 22px 22px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+}
+.dialogo-caja h2 { margin: 0 0 14px; font-size: 24px; color: var(--verde-oscuro); }
+.pasos-ios { margin: 0 0 20px; padding-left: 24px; font-size: 18px; line-height: 1.55; }
+.pasos-ios li { margin-bottom: 10px; }
+.pasos-ios .ico { vertical-align: -4px; color: #0a7aff; }
+
+/* =========================================================
+   Página de verificación (/v/...)
+   ========================================================= */
+.verificacion { text-align: center; }
+.estado {
+  display: flex; gap: 14px; align-items: center; text-align: left;
+  padding: 18px; border-radius: 18px; margin-bottom: 22px;
+}
+.estado .ico { width: 44px; height: 44px; flex-shrink: 0; stroke-width: 3; border-radius: 50%; padding: 8px; color: #fff; }
+.estado strong { display: block; font-size: 24px; line-height: 1.2; }
+.estado span { display: block; font-size: 16.5px; margin-top: 2px; }
+.estado-ok { background: var(--verde-claro); color: var(--verde-oscuro); }
+.estado-ok .ico { background: var(--verde); }
+.estado-no { background: var(--rojo-claro); color: #8c1418; }
+.estado-no .ico { background: var(--rojo); }
+.verif-foto {
+  width: 150px; aspect-ratio: 3 / 4; object-fit: cover;
+  border-radius: 16px; border: 4px solid #fff;
+  box-shadow: 0 8px 24px rgba(7,58,31,.2);
+}
+.verif-persona h1 { margin: 14px 0 10px; font-size: 27px; }
+.verif-persona dl { display: flex; justify-content: center; gap: 28px; margin: 0; }
+.verif-persona dt { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texto-suave); }
+.verif-persona dd { margin: 2px 0 0; font-size: 19px; font-weight: 700; }
+.verif-ayuda { margin: 20px 0 0; font-size: 17px; color: var(--texto); }
+.verif-fecha { margin: 14px 0 0; font-size: 14.5px; color: var(--texto-suave); }
+
+/* =========================================================
+   Política de privacidad
+   ========================================================= */
+.documento { max-width: 760px; line-height: 1.65; }
+.documento h2 { font-size: 21px; color: var(--verde-oscuro); margin: 28px 0 8px; }
+.documento p, .documento li { font-size: 17px; }
+.documento ul { padding-left: 22px; margin: 8px 0; }
+.documento li { margin-bottom: 6px; }
+.documento a { color: var(--verde); font-weight: 600; }
+.documento .atras { text-decoration: none; }
+mark.pendiente { background: #fff1a8; color: #5c4700; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+.lema a, .consentimiento a { color: var(--verde); font-weight: 700; }
+
+@media print {
+  .aviso-offline, .nota-qr, .instalar, .dialogo { display: none !important; }
+}
+
+/* Carnet horizontal con QR: espacios más justos para que entren nombres largos */
+.carnet-cuerpo { margin-top: 2cqw; }
+.carnet-info .carnet-tipo { margin-bottom: 1.1cqw; }
+.carnet-info .carnet-nombre { font-size: 4.4cqw; }
+.carnet .carnet-datos { margin-top: 1.8cqw; }
+.carnet .carnet-pie { margin-top: 2.2cqw; }
+.carnet-qr { width: 12.5cqw; }
+.cv-qr { width: 19cqw; }

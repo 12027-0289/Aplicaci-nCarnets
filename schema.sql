@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS carnets (
   nombre     TEXT NOT NULL,
   filial     TEXT NOT NULL,
   nacimiento TEXT NOT NULL,          -- formato AAAA-MM-DD
-  token      TEXT NOT NULL UNIQUE,   -- para "recordar en este celular"
+  token      TEXT NOT NULL UNIQUE,   -- para "recordar en este celular" (secreto, nunca se muestra)
+  verificacion TEXT UNIQUE,          -- código público del QR del carnet (/v/<código>)
   creado     TEXT NOT NULL,          -- fecha de creación AAAA-MM-DD
   foto       TEXT,                   -- fecha y hora en que subió su foto (NULL = sin foto)
   consentimiento TEXT                -- fecha y hora en que autorizó guardar su foto

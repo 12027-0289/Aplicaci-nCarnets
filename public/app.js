@@ -59,10 +59,20 @@ function mostrar(paso) {
 }
 
 // --- "Recordar en este celular" (puede fallar en modo privado) ---
+// Si la persona eligió "Recordar en este celular", también se guarda una copia del carnet
+// para poder mostrarlo sin internet. Al salir, ambas cosas se borran.
+const CLAVE_CARNET = "carnet-adep-carnet";
 const token = {
   leer() { try { return localStorage.getItem(CLAVE_TOKEN); } catch { return null; } },
   guardar(valor) { try { localStorage.setItem(CLAVE_TOKEN, valor); } catch {} },
-  borrar() { try { localStorage.removeItem(CLAVE_TOKEN); } catch {} }
+  borrar() { try { localStorage.removeItem(CLAVE_TOKEN); localStorage.removeItem(CLAVE_CARNET); } catch {} }
+};
+const copiaLocal = {
+  leer() { try { return JSON.parse(localStorage.getItem(CLAVE_CARNET)); } catch { return null; } },
+  guardar(carnet) {
+    try { localStorage.setItem(CLAVE_CARNET, JSON.stringify({ ...carnet, guardado: new Date().toISOString() })); } catch {}
+  },
+  borrar() { try { localStorage.removeItem(CLAVE_CARNET); } catch {} }
 };
 
 // --- Cédula ---
@@ -322,8 +332,34 @@ function iniciales(nombre) {
 
 let carnetActual = null;
 
-function mostrarCarnet(carnet, festejar = false) {
+// --- Código QR de verificación ---
+// Lleva a /v/<código>, donde cualquiera puede comprobar que el carnet es válido.
+function dibujarQR(codigo) {
+  document.querySelectorAll("[data-qr]").forEach(el => {
+    el.innerHTML = "";
+    if (!codigo || typeof qrcode === "undefined") return;
+    const qr = qrcode(0, "M");
+    qr.addData(`${location.origin}/v/${codigo}`);
+    qr.make();
+    const img = new Image();
+    img.src = qr.createDataURL(8, 0);
+    img.alt = "Código QR para verificar el carnet";
+    el.appendChild(img);
+  });
+}
+
+function mostrarCarnet(carnet, festejar = false, sinConexion = false) {
   carnetActual = carnet;
+  // Copia para ver el carnet sin internet (solo si este celular lo recuerda)
+  if (!sinConexion && token.leer() === carnet.token) copiaLocal.guardar(carnet);
+  const aviso = $("aviso-offline");
+  aviso.classList.toggle("oculto", !sinConexion);
+  if (sinConexion) {
+    const fecha = new Date(carnet.guardado).toLocaleDateString("es-CR", { day: "numeric", month: "long", year: "numeric" });
+    aviso.innerHTML = `${icono("sin-senal")} <span>Sin conexión. Mostrando el carnet guardado en este celular (actualizado el ${fecha}).</span>`;
+  }
+  $("btn-cambiar-foto").classList.toggle("oculto", sinConexion);
+  dibujarQR(carnet.verificacion);
   if (festejar) { setTimeout(celebrar, 350); vibrar([30, 50, 30, 50, 60]); }
   const [a, m, d] = carnet.creado.split("-");
   const valores = {
@@ -573,12 +609,49 @@ async function iniciar() {
     });
     const r = await res.json();
     if (r.estado === "ok") return mostrarCarnet(r.carnet);
-    if (r.estado === "sin-foto") return pedirFoto(r.carnet, false);
+    if (r.estado === "sin-foto") { copiaLocal.borrar(); return pedirFoto(r.carnet, false); }
     if (res.status === 401) token.borrar();
+    else if (res.status === 429 || res.status >= 500) throw new Error("servidor");
   } catch {
-    // Sin conexión: se muestra el inicio
+    // Sin conexión (o el servidor no responde): mostrar la copia guardada en este celular
+    const copia = copiaLocal.leer();
+    if (copia && copia.token === guardado) return mostrarCarnet(copia, false, true);
   }
   mostrar("paso-inicio");
 }
+
+// --- App instalable ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+
+const instalada = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const esIphone = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+let pedidoInstalar = null;
+
+// Android/Chrome avisa cuando la página se puede instalar
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  pedidoInstalar = e;
+  $("instalar").classList.remove("oculto");
+});
+window.addEventListener("appinstalled", () => {
+  pedidoInstalar = null;
+  $("instalar").classList.add("oculto");
+});
+// En iPhone no hay aviso automático: se muestran instrucciones
+if (esIphone && !instalada()) $("instalar").classList.remove("oculto");
+
+$("btn-instalar").addEventListener("click", async () => {
+  if (pedidoInstalar) {
+    pedidoInstalar.prompt();
+    const { outcome } = await pedidoInstalar.userChoice;
+    if (outcome === "accepted") $("instalar").classList.add("oculto");
+    pedidoInstalar = null;
+  } else if (esIphone) {
+    $("dialogo-ios").classList.remove("oculto");
+  }
+});
+$("cerrar-ios").addEventListener("click", () => $("dialogo-ios").classList.add("oculto"));
 
 iniciar();

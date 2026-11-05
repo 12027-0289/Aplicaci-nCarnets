@@ -12,6 +12,12 @@ Página web donde los afiliados de ADEP crean y ven su carnet digital.
   se le pide tomarse una, y el carnet no se muestra hasta que la suba (también lo valida el servidor).
 - **Ver mi carnet:** cédula + fecha de nacimiento.
 - **Recordar en este celular:** después de entrar una vez, el carnet aparece directo al abrir la página.
+- **Código QR de verificación:** el carnet lleva un QR. Quien lo escanee (un comercio, ADEP) ve en ese
+  momento si el carnet está **vigente**, con la foto y el nombre para compararlos con la persona. La cédula
+  se muestra incompleta y nunca la fecha de nacimiento.
+- **App instalable y sin internet:** se puede instalar en el celular como una app (Android: botón
+  "Instalar"; iPhone: instrucciones). Si eligió "Recordar en este celular", el carnet se ve aunque no haya señal.
+- **Política de privacidad** en `/privacidad` (Ley 8968), enlazada desde la autorización de la foto y el pie de página.
 - El carnet se puede ver vertical u horizontal, descargar como imagen o imprimir.
 - Si la cédula no está en la lista, se le ofrece escribir por WhatsApp para afiliarse.
 
@@ -26,6 +32,13 @@ public/                   → la página que ve el afiliado
   estilos.css
   app.js
   logo.png                → logo oficial de ADEP
+  privacidad.html         → política de privacidad (BORRADOR: complete lo marcado en amarillo)
+  sw.js                   → guarda la página en el celular para que abra sin internet
+  manifest.webmanifest    → nombre, colores e íconos de la app instalable
+  iconos/                 → íconos de la app (hechos a partir de logo.png)
+  vendor/                 → librerías: html2canvas (descargar imagen) y qrcode (código QR)
+  _headers                → que sw.js y el manifiesto no se queden viejos en los celulares
+functions/v/[codigo].js   → página que se abre al escanear el QR (/v/<código>)
 functions/api/            → lo que corre en el servidor
   crear.js                → crea el carnet (si la cédula está en la lista)
   ingresar.js             → muestra el carnet con cédula + fecha de nacimiento
@@ -48,6 +61,10 @@ La base de datos tiene:
 | `filiales`  | Lista de filiales                                    | ADEP                       |
 | `carnets`   | Nombre, filial, fecha de nacimiento y fecha de la foto/autorización | El afiliado, al crearlo |
 | `intentos`  | Intentos fallidos, para frenar a quien intente adivinar | Automático              |
+
+Cada carnet tiene un **código de verificación** público (12 letras y números al azar) que va en el QR.
+Es distinto de la clave secreta que usa "Recordar en este celular", así que escanear el QR no permite
+entrar al carnet de nadie.
 
 Las fotos están en R2 como `fotos/<cédula>.jpg` (480 × 640 px, unos 50–100 KB cada una). El celular
 recorta y comprime la foto antes de enviarla, así sube rápido aunque la señal sea mala.
@@ -158,7 +175,17 @@ npx wrangler r2 object delete carnet-adep-fotos/fotos/102340567.jpg --remote
 npx wrangler d1 execute carnet-adep --remote --command "SELECT COUNT(*) AS carnets FROM carnets"
 ```
 
-## 6. Personalizar
+## 6. Antes de publicar
+
+- **Política de privacidad:** abra `public/privacidad.html` y complete lo marcado como pendiente (cédula
+  jurídica, dirección, fecha y plazo de conservación). Es un borrador: conviene que lo revise la asesoría legal de ADEP.
+- **Dirección definitiva de la página:** el QR guarda la dirección donde está publicada la página
+  (por ejemplo `https://carnet.adepcr.org/v/...`). Si va a usar un dominio propio, configúrelo **antes**
+  de que los afiliados impriman o compartan su carnet.
+- **Tamaño del QR impreso:** en la plantilla provisional el QR mide cerca de 1 cm impreso. Se lee bien en
+  pantalla; para carnets impresos, la plantilla oficial debería darle al QR al menos 1,5 cm.
+
+## 7. Personalizar
 
 - **Plantilla del carnet:** la actual es **provisional**. En `public/index.html` está entre las marcas
   `PLANTILLA PROVISIONAL` y `FIN DE LA PLANTILLA PROVISIONAL`; sus estilos están en `public/estilos.css`
@@ -167,7 +194,10 @@ npx wrangler d1 execute carnet-adep --remote --command "SELECT COUNT(*) AS carne
 - **Texto de autorización de la foto:** en `public/index.html` (busque "Autorizo a ADEP"). Conviene que
   ADEP lo revise.
 - **Logo:** está en `public/logo.png` (redondo, con fondo transparente). Para cambiarlo, reemplace ese archivo
-  por otro con el mismo nombre.
+  por otro con el mismo nombre. Los íconos de la app (`public/iconos/`) se hicieron a partir de él; si consigue
+  el logo en mejor calidad (512 × 512 px o más), conviene volver a generarlos.
+- **Cambios en la página y celulares con la app instalada:** la app busca la versión nueva cada vez que
+  hay internet. Si cambia la lista de archivos de `public/sw.js`, suba también el número de `VERSION` en ese archivo.
 - **Textos, teléfono y correo:** en `public/index.html`.
 - **Número y mensaje de WhatsApp:** al inicio de `public/app.js`.
 - **Colores:** al inicio de `public/estilos.css` (`--verde`, `--rojo`, etc.).
