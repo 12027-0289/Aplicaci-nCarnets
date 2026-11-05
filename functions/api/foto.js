@@ -3,13 +3,13 @@
 // (carnets creados antes de que existieran las fotos, o si quiere cambiarla).
 
 import {
-  json, leerCuerpo, estaBloqueado, registrarFallo, datosCarnet, leerFoto, guardarFoto, buscarCarnet, tokenValido,
+  json, leerCuerpo, estaBloqueado, registrarFallo, datosCarnet, leerFoto, guardarFoto,
   MENSAJE_BLOQUEO, MENSAJE_CONSENTIMIENTO
 } from "../../lib/comun.js";
 
 export async function onRequestPost({ request, env }) {
   const { token, foto: fotoTexto, consentimiento } = await leerCuerpo(request);
-  if (!tokenValido(token)) return json({ estado: "invalido" }, 401);
+  if (typeof token !== "string" || token.length !== 36) return json({ estado: "invalido" }, 401);
 
   const foto = leerFoto(fotoTexto);
   if (!foto) return json({ error: "No se pudo leer la foto. Intente tomarla de nuevo." }, 400);
@@ -17,9 +17,14 @@ export async function onRequestPost({ request, env }) {
 
   if (await estaBloqueado(env, request)) return json({ error: MENSAJE_BLOQUEO }, 429);
 
-  const carnet = await buscarCarnet(env, { token: `eq.${token}` });
+  const carnet = await env.DB
+    .prepare(`SELECT c.* FROM carnets c
+              JOIN afiliados a ON a.cedula = c.cedula AND a.activo = 1
+              WHERE c.token = ?`)
+    .bind(token)
+    .first();
 
-  if (!carnet || !carnet.activo) {
+  if (!carnet) {
     await registrarFallo(env, request);
     return json({ estado: "invalido" }, 401);
   }

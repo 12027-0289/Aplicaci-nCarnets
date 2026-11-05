@@ -1,11 +1,6 @@
 node_modules/
 .wrangler/
 
-# Claves de Supabase: NUNCA subirlas a GitHub
-.dev.vars
-.env.produccion
-.env*.local
-
 # Datos reales de afiliados: NUNCA subirlos a GitHub
 datos/afiliados.csv
 datos/importar.sql
