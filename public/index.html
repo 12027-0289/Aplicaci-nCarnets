@@ -209,6 +209,18 @@
     </div>
   </div>
 
+  <!-- Código QR de verificación (se abre con el botón "Mostrar código QR") -->
+  <div class="dialogo oculto" id="dialogo-qr" role="dialog" aria-modal="true" aria-labelledby="qr-titulo">
+    <div class="dialogo-caja dialogo-qr">
+      <h2 id="qr-titulo">Código de verificación</h2>
+      <p>Muestre este código a quien necesite comprobar que su carnet es válido.</p>
+      <div class="qr-grande" data-qr></div>
+      <p class="qr-nombre" data-campo="nombre"></p>
+      <p class="qr-ayuda">Al escanearlo con la cámara del celular, se ve si su carnet está vigente.</p>
+      <button class="btn btn-principal" type="button" id="cerrar-qr">Cerrar</button>
+    </div>
+  </div>
+
   <!-- Instrucciones para instalar en iPhone (Safari no tiene botón automático) -->
   <div class="dialogo oculto" id="dialogo-ios" role="dialog" aria-modal="true" aria-labelledby="ios-titulo">
     <div class="dialogo-caja">
@@ -263,12 +275,8 @@
         <div><small>Filial</small><b data-campo="filial"></b></div>
       </div>
       <div class="cv-pie">
-        <div class="cv-qr" data-qr></div>
-        <div class="cv-pie-texto">
-          <span class="activo"><i></i>AFILIADO ACTIVO</span>
-          <span class="emitido" data-campo="emitido"></span>
-          <span class="qr-leyenda">Escanee para verificar</span>
-        </div>
+        <span class="activo"><i></i>AFILIADO ACTIVO</span>
+        <span class="emitido" data-campo="emitido"></span>
       </div>
       <div class="franja"></div>
     </div>
@@ -284,12 +292,11 @@
             <strong>ADEP</strong>
             <span>Asociación de Educadores<br>Pensionados</span>
           </div>
-          <div class="carnet-qr" data-qr></div>
+          <div class="carnet-tipo">Carnet de afiliado</div>
         </div>
         <div class="carnet-cuerpo">
           <div class="carnet-foto" data-foto></div>
           <div class="carnet-info">
-            <div class="carnet-tipo">Carnet de afiliado</div>
             <div class="carnet-nombre" data-campo="nombre"></div>
             <div class="carnet-datos">
               <div class="carnet-dato"><small>Cédula</small><b data-campo="cedula"></b></div>
@@ -309,9 +316,8 @@
     <div class="botones-carnet">
       <button class="btn btn-principal" id="btn-descargar" type="button"><svg class="ico" aria-hidden="true"><use href="#i-descargar"/></svg> Descargar imagen</button>
       <button class="btn btn-secundario" type="button" onclick="window.print()"><svg class="ico" aria-hidden="true"><use href="#i-imprimir"/></svg> Imprimir</button>
+      <button class="btn btn-secundario btn-ancho" type="button" id="btn-qr"><svg class="ico" aria-hidden="true"><use href="#i-qr"/></svg> Mostrar código QR</button>
     </div>
-    <p class="nota-qr"><svg class="ico" aria-hidden="true"><use href="#i-qr"/></svg> El código QR permite a comercios y a ADEP comprobar que su carnet es válido.</p>
-
     <!-- Instalar como app (aparece solo si el celular lo permite y aún no está instalada) -->
     <div class="instalar oculto" id="instalar">
       <div class="instalar-icono"><svg class="ico" aria-hidden="true"><use href="#i-instalar"/></svg></div>

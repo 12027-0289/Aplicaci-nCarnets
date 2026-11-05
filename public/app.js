@@ -332,7 +332,7 @@ function iniciales(nombre) {
 
 let carnetActual = null;
 
-// --- Código QR de verificación ---
+// --- Código QR de verificación (en la ventana del botón "Mostrar código QR", no en el carnet) ---
 // Lleva a /v/<código>, donde cualquiera puede comprobar que el carnet es válido.
 function dibujarQR(codigo) {
   document.querySelectorAll("[data-qr]").forEach(el => {
@@ -342,7 +342,7 @@ function dibujarQR(codigo) {
     qr.addData(`${location.origin}/v/${codigo}`);
     qr.make();
     const img = new Image();
-    img.src = qr.createDataURL(8, 0);
+    img.src = qr.createDataURL(10, 0);
     img.alt = "Código QR para verificar el carnet";
     el.appendChild(img);
   });
@@ -360,6 +360,7 @@ function mostrarCarnet(carnet, festejar = false, sinConexion = false) {
   }
   $("btn-cambiar-foto").classList.toggle("oculto", sinConexion);
   dibujarQR(carnet.verificacion);
+  $("btn-qr").classList.toggle("oculto", !carnet.verificacion);
   if (festejar) { setTimeout(celebrar, 350); vibrar([30, 50, 30, 50, 60]); }
   const [a, m, d] = carnet.creado.split("-");
   const valores = {
@@ -653,5 +654,16 @@ $("btn-instalar").addEventListener("click", async () => {
   }
 });
 $("cerrar-ios").addEventListener("click", () => $("dialogo-ios").classList.add("oculto"));
+
+// --- Ventana del código QR ---
+$("btn-qr").addEventListener("click", () => $("dialogo-qr").classList.remove("oculto"));
+$("cerrar-qr").addEventListener("click", () => $("dialogo-qr").classList.add("oculto"));
+// Cerrar tocando fuera de la ventana o con la tecla Esc
+document.querySelectorAll(".dialogo").forEach(d => d.addEventListener("click", e => {
+  if (e.target === d) d.classList.add("oculto");
+}));
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".dialogo").forEach(d => d.classList.add("oculto"));
+});
 
 iniciar();

@@ -759,29 +759,6 @@ footer { background: var(--blanco); border-top: 1px solid var(--borde); }
 .sin-animacion .marco-carnet > div { transform: none !important; }
 .sin-animacion .marco-carnet > div::before { display: none; }
 
-/* =========================================================
-   Código QR en el carnet (parte de la plantilla provisional)
-   ========================================================= */
-.cv-pie { display: flex; align-items: center; justify-content: center; gap: 4cqw; text-align: left; }
-.cv-pie-texto { display: flex; flex-direction: column; align-items: flex-start; gap: 1.2cqw; }
-.cv-pie .emitido { margin-top: 0; }
-.qr-leyenda { font-size: 2.6cqw; color: var(--texto-suave); font-weight: 600; }
-.cv-qr, .carnet-qr {
-  flex-shrink: 0;
-  background: #fff;
-  border-radius: 1.6cqw;
-}
-.cv-qr { width: 21cqw; padding: 1.4cqw; border: 1px solid var(--borde); }
-.carnet-qr { width: 13.5cqw; padding: 1cqw; margin-left: auto; align-self: flex-start; box-shadow: 0 1cqw 3cqw rgba(0,0,0,.2); }
-/* Horizontal: la etiqueta "Carnet de afiliado" va encima del nombre (arriba a la derecha está el QR) */
-.carnet-info .carnet-tipo {
-  display: inline-block; margin: 0 0 1.6cqw; padding: .8cqw 2cqw;
-  font-size: 2.1cqw; align-self: auto;
-}
-.carnet-info .carnet-nombre { font-size: 4.7cqw; }
-.carnet-foto { width: 22cqw; }
-.cv-qr:empty, .carnet-qr:empty { display: none; }
-.cv-qr img, .carnet-qr img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
 
 /* =========================================================
    Vista del carnet: avisos, QR, instalar
@@ -793,11 +770,6 @@ a.marca { color: inherit; text-decoration: none; }
   background: #fff6db; color: #6b4e00; font-size: 16px; font-weight: 600; line-height: 1.4;
 }
 .aviso-offline .ico { width: 24px; height: 24px; }
-.nota-qr {
-  display: flex; gap: 8px; align-items: flex-start; justify-content: center; text-align: left;
-  margin: 18px auto 0; max-width: 440px; font-size: 15.5px; line-height: 1.45; color: var(--texto-suave);
-}
-.nota-qr .ico { color: var(--verde); margin-top: 1px; }
 
 .instalar {
   display: flex; align-items: center; gap: 14px; text-align: left;
@@ -877,14 +849,31 @@ mark.pendiente { background: #fff1a8; color: #5c4700; padding: 0 4px; border-rad
 .lema a, .consentimiento a { color: var(--verde); font-weight: 700; }
 
 @media print {
-  .aviso-offline, .nota-qr, .instalar, .dialogo { display: none !important; }
+  .aviso-offline, .instalar, .dialogo { display: none !important; }
 }
 
-/* Carnet horizontal con QR: espacios más justos para que entren nombres largos */
-.carnet-cuerpo { margin-top: 2cqw; }
-.carnet-info .carnet-tipo { margin-bottom: 1.1cqw; }
-.carnet-info .carnet-nombre { font-size: 4.4cqw; }
-.carnet .carnet-datos { margin-top: 1.8cqw; }
-.carnet .carnet-pie { margin-top: 2.2cqw; }
-.carnet-qr { width: 12.5cqw; }
-.cv-qr { width: 19cqw; }
+/* =========================================================
+   Botón y ventana del código QR de verificación
+   ========================================================= */
+.botones-carnet .btn-ancho { flex-basis: 100%; max-width: 530px; }
+.dialogo-qr { text-align: center; }
+.dialogo-qr p { margin: 0 0 16px; font-size: 17px; line-height: 1.5; color: var(--texto-suave); }
+.qr-grande {
+  width: min(78vw, 300px);
+  margin: 0 auto;
+  padding: 14px;
+  background: #fff;
+  border: 2px solid var(--borde);
+  border-radius: 18px;
+}
+.qr-grande img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.dialogo-qr .qr-nombre { margin: 14px 0 4px; font-size: 20px; font-weight: 800; color: var(--verde-oscuro); }
+.dialogo-qr .qr-ayuda { font-size: 15px; }
+.dialogo-qr .btn { width: 100%; margin-top: 4px; }
+
+@keyframes hoja-sube { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fondo-entra { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .dialogo:not(.oculto) { animation: fondo-entra .25s ease both; }
+  .dialogo:not(.oculto) .dialogo-caja { animation: hoja-sube .35s cubic-bezier(.2,.8,.2,1) both; }
+}

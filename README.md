@@ -12,8 +12,8 @@ Página web donde los afiliados de ADEP crean y ven su carnet digital.
   se le pide tomarse una, y el carnet no se muestra hasta que la suba (también lo valida el servidor).
 - **Ver mi carnet:** cédula + fecha de nacimiento.
 - **Recordar en este celular:** después de entrar una vez, el carnet aparece directo al abrir la página.
-- **Código QR de verificación:** el carnet lleva un QR. Quien lo escanee (un comercio, ADEP) ve en ese
-  momento si el carnet está **vigente**, con la foto y el nombre para compararlos con la persona. La cédula
+- **Código QR de verificación:** el botón **"Mostrar código QR"** abre el código en grande (no va impreso
+  en el carnet). Quien lo escanee (un comercio, ADEP) ve en ese momento si el carnet está **vigente**, con la foto y el nombre para compararlos con la persona. La cédula
   se muestra incompleta y nunca la fecha de nacimiento.
 - **App instalable y sin internet:** se puede instalar en el celular como una app (Android: botón
   "Instalar"; iPhone: instrucciones). Si eligió "Recordar en este celular", el carnet se ve aunque no haya señal.
@@ -62,7 +62,8 @@ La base de datos tiene:
 | `carnets`   | Nombre, filial, fecha de nacimiento y fecha de la foto/autorización | El afiliado, al crearlo |
 | `intentos`  | Intentos fallidos, para frenar a quien intente adivinar | Automático              |
 
-Cada carnet tiene un **código de verificación** público (12 letras y números al azar) que va en el QR.
+Cada carnet tiene un **código de verificación** público (12 letras y números al azar) que va en el QR
+del botón "Mostrar código QR".
 Es distinto de la clave secreta que usa "Recordar en este celular", así que escanear el QR no permite
 entrar al carnet de nadie.
 
@@ -179,11 +180,9 @@ npx wrangler d1 execute carnet-adep --remote --command "SELECT COUNT(*) AS carne
 
 - **Política de privacidad:** abra `public/privacidad.html` y complete lo marcado como pendiente (cédula
   jurídica, dirección, fecha y plazo de conservación). Es un borrador: conviene que lo revise la asesoría legal de ADEP.
-- **Dirección definitiva de la página:** el QR guarda la dirección donde está publicada la página
-  (por ejemplo `https://carnet.adepcr.org/v/...`). Si va a usar un dominio propio, configúrelo **antes**
-  de que los afiliados impriman o compartan su carnet.
-- **Tamaño del QR impreso:** en la plantilla provisional el QR mide cerca de 1 cm impreso. Se lee bien en
-  pantalla; para carnets impresos, la plantilla oficial debería darle al QR al menos 1,5 cm.
+- **Dirección definitiva de la página:** el QR lleva a la dirección donde está publicada la página
+  (por ejemplo `https://carnet.adepcr.org/v/...`). Como se genera cada vez que se abre, si luego cambia de
+  dominio los códigos nuevos usan la dirección nueva; aun así, conviene decidir el dominio antes de publicar.
 
 ## 7. Personalizar
 
